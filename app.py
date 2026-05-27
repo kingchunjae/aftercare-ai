@@ -15,7 +15,7 @@ from src.preprocessing import load_data, get_summary_stats, get_region_detail, s
 from src.model import ensure_trained, load_models, predict_region, get_feature_importance
 from src.visualize import (
     build_map, imbal_gauge, demand_forecast_chart,
-    type_pie, budget_bar, importance_bar
+    type_pie, budget_bar, budget_dumbbell, importance_bar
 )
 from src.ai_report import generate_report, estimate_cost
 from streamlit_folium import st_folium
@@ -429,67 +429,160 @@ with tab2:
 # TAB 3: 예산 배분 시뮬레이터
 # ─────────────────────────────
 with tab3:
-    st.markdown('<p class="section-header">예산 입력</p>', unsafe_allow_html=True)
-    col_s1, col_s2 = st.columns([2, 1])
+
+    # ① 예산 설정 ─────────────────────────────────────
+    col_s1, col_s2 = st.columns([3, 1])
     with col_s1:
         budget = st.slider("총 배분 가능 예산 (억원)", 5, 200, 50, step=5)
     with col_s2:
         st.metric("총 예산", f"{budget}억원", f"= {budget/10:.0f}십억원")
 
-    st.markdown(
-        "**배분 기준**: A형 45% → C형 40% → D형 10% → B형 5%  "
-        "(위험 점수·유형별 우선순위 반영)",
-        unsafe_allow_html=True
-    )
+    # 배분 원칙 컬러 카드
+    st.markdown("""
+<div style='display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 18px 0'>
+  <div style='flex:1;min-width:110px;background:#fdecea;
+       border-left:4px solid #C0392B;border-radius:6px;padding:9px 12px'>
+    <div style='font-size:13px;font-weight:700;color:#C0392B'>A형 &nbsp;45%</div>
+    <div style='font-size:11px;color:#666;margin-top:2px'>위기+공급부족<br>긴급 개입</div>
+  </div>
+  <div style='flex:1;min-width:110px;background:#eaf0f7;
+       border-left:4px solid #1B4D6B;border-radius:6px;padding:9px 12px'>
+    <div style='font-size:13px;font-weight:700;color:#1B4D6B'>C형 &nbsp;40%</div>
+    <div style='font-size:11px;color:#666;margin-top:2px'>비위기+공급부족<br>긴급 확충</div>
+  </div>
+  <div style='flex:1;min-width:110px;background:#eaf7ed;
+       border-left:4px solid #27AE60;border-radius:6px;padding:9px 12px'>
+    <div style='font-size:13px;font-weight:700;color:#27AE60'>D형 &nbsp;10%</div>
+    <div style='font-size:11px;color:#666;margin-top:2px'>비위기+균형<br>모니터링</div>
+  </div>
+  <div style='flex:1;min-width:110px;background:#fef3e8;
+       border-left:4px solid #E67E22;border-radius:6px;padding:9px 12px'>
+    <div style='font-size:13px;font-weight:700;color:#E67E22'>B형 &nbsp;&nbsp;5%</div>
+    <div style='font-size:11px;color:#666;margin-top:2px'>위기+공급과잉<br>구조 전환</div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
     result = simulate_budget(df_filtered, budget)
 
-    # 파이 차트 (배분 비율)
-    col_pie, col_bar = st.columns([1, 2])
+    # ② Before / After 핵심 지표 ──────────────────────
+    avg_before  = result["imbal_before"].mean()
+    avg_after   = result["imbal_after"].mean()
+    improve_pct = abs(avg_before - avg_after) / avg_before * 100
+    n_improved  = int(sum(
+        abs(r["imbal_after"] - 1.0) < abs(r["imbal_before"] - 1.0)
+        for _, r in result.iterrows()
+    ))
+    ac_budget = result[result["region_type"].isin(["A","C"])]["allocated_억"].sum()
+    best = (result
+            .assign(_d=result["imbal_before"] - result["imbal_after"])
+            .nlargest(1, "_d").iloc[0])
+
+    st.markdown('<p class="section-header">📊 배분 효과 요약</p>', unsafe_allow_html=True)
+
+    # 배분 전 / 화살표 / 배분 후
+    col_bef, col_arr, col_aft = st.columns([11, 2, 11])
+    with col_bef:
+        st.markdown("""
+<div style='background:#f4f4f2;border-radius:8px;padding:10px 14px 4px;
+     border-top:3px solid #bbb;margin-bottom:10px'>
+  <span style='font-size:11px;font-weight:700;color:#999'>⬤ &nbsp;배분 전</span>
+</div>""", unsafe_allow_html=True)
+        b1, b2 = st.columns(2)
+        b1.metric("평균 불균형 지수", f"{avg_before:.3f}")
+        b2.metric("고위험 지역", f"{stats['A']+stats['C']}개",
+                  help="A형(위기+공급부족) + C형(비위기+공급부족)")
+
+    with col_arr:
+        st.markdown(
+            "<div style='text-align:center;font-size:28px;font-weight:700;"
+            "color:#27AE60;padding-top:38px'>→</div>",
+            unsafe_allow_html=True)
+
+    with col_aft:
+        st.markdown("""
+<div style='background:#eaf7ed;border-radius:8px;padding:10px 14px 4px;
+     border-top:3px solid #27AE60;margin-bottom:10px'>
+  <span style='font-size:11px;font-weight:700;color:#27AE60'>◯ &nbsp;배분 후 (예측)</span>
+</div>""", unsafe_allow_html=True)
+        a1, a2 = st.columns(2)
+        a1.metric("평균 불균형 지수", f"{avg_after:.3f}",
+                  f"▼ {improve_pct:.1f}% 개선")
+        a2.metric("균형 접근 지역", f"{n_improved}개",
+                  f"전체 {len(result)}개 중")
+
+    # 보조 KPI 4개
+    st.markdown("---")
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("A·C형 집중 투자",  f"{ac_budget:.1f}억원",
+              f"전체 예산의 {ac_budget/budget*100:.0f}%")
+    k2.metric("지역당 평균 배분", f"{budget/len(result):.1f}억원")
+    k3.metric("최대 수혜 지역",   best["name"],
+              f"불균형 {best['imbal_before']:.2f} → {best['imbal_after']:.2f}")
+    k4.metric("평균 불균형 개선", f"{avg_before - avg_after:.4f}",
+              "균형 기준(1.0) 대비")
+
+    st.divider()
+
+    # ③ 덤벨 차트 + 배분 비율 도넛 ───────────────────
+    col_chart, col_pie = st.columns([3, 1])
+
+    with col_chart:
+        st.plotly_chart(budget_dumbbell(result), use_container_width=True)
+
     with col_pie:
-        alloc = result.groupby("region_type")["allocated_억"].sum().reset_index()
+        alloc  = result.groupby("region_type")["allocated_억"].sum().reset_index()
         alloc["label"] = alloc["region_type"].map(lambda t: f"{t}형")
-        colors = [TYPE_INFO[t]["color"] for t in alloc["region_type"]]
-        fig_pie = __import__("plotly.graph_objects", fromlist=["Figure"]).Figure(
-            __import__("plotly.graph_objects", fromlist=["Pie"]).Pie(
-                labels=alloc["label"], values=alloc["allocated_억"],
-                marker_colors=colors, hole=0.4,
-                textinfo="percent+label", textfont_size=12
-            )
-        )
+        _colors = [TYPE_INFO[t]["color"] for t in alloc["region_type"]]
+        import plotly.graph_objects as _go
+        fig_pie = _go.Figure(_go.Pie(
+            labels=alloc["label"],
+            values=alloc["allocated_억"],
+            marker_colors=_colors,
+            hole=0.45,
+            textinfo="percent+label",
+            textfont_size=12,
+        ))
         fig_pie.update_layout(
-            title="유형별 예산 배분 비율",
-            height=280, margin=dict(l=10,r=10,t=45,b=10),
-            paper_bgcolor="rgba(0,0,0,0)", showlegend=False
+            title=dict(text="유형별<br>예산 배분", font_size=12),
+            height=260,
+            margin=dict(l=10, r=10, t=55, b=10),
+            paper_bgcolor="rgba(0,0,0,0)",
+            showlegend=False,
         )
         st.plotly_chart(fig_pie, use_container_width=True)
 
-    with col_bar:
-        st.plotly_chart(budget_bar(result), use_container_width=True)
+        # 유형별 배분 요약 텍스트
+        for _, ar in alloc.sort_values("allocated_억", ascending=False).iterrows():
+            c = TYPE_INFO[ar["region_type"]]["color"]
+            st.markdown(
+                f"<div style='display:flex;justify-content:space-between;"
+                f"font-size:12px;padding:2px 4px'>"
+                f"<span style='color:{c};font-weight:700'>{ar['label']}</span>"
+                f"<span>{ar['allocated_억']:.1f}억원</span></div>",
+                unsafe_allow_html=True,
+            )
 
+    # ④ 지역별 배분 내역 테이블 ────────────────────────
     st.markdown('<p class="section-header">지역별 배분 내역</p>', unsafe_allow_html=True)
-    show_cols = ["name","region_type","type_label","risk_score","care_waitlist","allocated_억","imbal_before","imbal_after"]
+    result["개선폭"] = (result["imbal_before"] - result["imbal_after"]).round(4)
+    show_cols = ["name","region_type","type_label","risk_score","care_waitlist",
+                 "allocated_억","imbal_before","imbal_after","개선폭"]
     disp = result[show_cols].copy()
-    disp.columns = ["지역명","유형","유형설명","위험점수","대기아동","배분(억)","배분전 불균형","배분후 불균형"]
+    disp.columns = ["지역명","유형","유형설명","위험점수","대기아동",
+                    "배분(억)","배분전 불균형","배분후 불균형","개선폭"]
+    _impr_max = float(result["개선폭"].max()) or 1.0
     st.dataframe(
         disp,
         use_container_width=True,
         column_config={
             "위험점수": st.column_config.ProgressColumn(
-                "위험점수",
-                min_value=0,
-                max_value=100,
-                format="%d",
-            )
-        }
-    )
-
-    # 효과 요약
-    avg_before = result["imbal_before"].mean()
-    avg_after  = result["imbal_after"].mean()
-    st.success(
-        f"예산 배분 후 평균 불균형 지수: {avg_before:.3f} → {avg_after:.3f} "
-        f"({abs(avg_before - avg_after) / avg_before * 100:.1f}% 개선 예상)"
+                "위험점수", min_value=0, max_value=100, format="%d",
+            ),
+            "개선폭": st.column_config.ProgressColumn(
+                "개선폭", min_value=0, max_value=_impr_max, format="%.4f",
+            ),
+        },
     )
 
 # ─────────────────────────────

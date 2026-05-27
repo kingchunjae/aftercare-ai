@@ -158,8 +158,39 @@ reg, clf, scaler = init_models(df)
 
 # ── 사이드바
 with st.sidebar:
-    st.title("🗺 돌봄 AI 진단")
-    st.caption("방과후·초등돌봄 수요-공급 불균형 진단 시스템")
+    # ── 헤더: 테크 대시보드 스타일
+    st.markdown(
+        f"<div style='font-family:sans-serif;padding:6px 0 4px 0'>"
+
+        # 아이콘 + 브랜드명
+        f"<div style='display:flex;align-items:center;gap:11px;margin-bottom:10px'>"
+        f"<div style='background:linear-gradient(135deg,#1B4D6B 0%,#C0392B 100%);"
+        f"width:44px;height:44px;border-radius:11px;display:flex;"
+        f"align-items:center;justify-content:center;"
+        f"font-size:22px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.18)'>&#127979;</div>"
+        f"<div>"
+        f"<div style='font-size:17px;font-weight:800;color:#1a1a1a;"
+        f"letter-spacing:-0.3px;line-height:1.2'>CareMap AI</div>"
+        f"<div style='font-size:10px;color:#999;margin-top:3px;font-weight:500'>"
+        f"초등돌봄 불균형 진단 플랫폼</div>"
+        f"</div>"
+        f"</div>"
+
+        # LIVE 상태 바
+        f"<div style='background:#f2f4f7;border-radius:7px;padding:7px 11px;"
+        f"display:flex;justify-content:space-between;align-items:center;"
+        f"border:1px solid #e8ebef'>"
+        f"<span style='font-size:10px;color:#27AE60;font-weight:700;"
+        f"display:flex;align-items:center;gap:4px'>"
+        f"<span style='width:6px;height:6px;background:#27AE60;border-radius:50%;"
+        f"display:inline-block'></span>LIVE</span>"
+        f"<span style='font-size:10px;color:#888'>"
+        f"{len(df)}개 지역 &nbsp;&#183;&nbsp; 교육 공공데이터</span>"
+        f"</div>"
+
+        f"</div>",
+        unsafe_allow_html=True,
+    )
     st.divider()
 
     st.subheader("필터")

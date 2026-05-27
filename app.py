@@ -83,7 +83,7 @@ st.markdown("""
 # ── 데이터 로드 & 모델 초기화
 # cache_version: 컬럼 구조가 바뀔 때 올려서 Streamlit Cloud 캐시 강제 무효화
 @st.cache_data
-def load(cache_version: int = 3):
+def load(cache_version: int = 4):
     df = load_data()
     return df
 
@@ -92,7 +92,7 @@ def init_models(df):
     ensure_trained(df)
     return load_models()
 
-df = load(cache_version=3)
+df = load(cache_version=4)
 reg, clf, scaler = init_models(df)
 
 # ── 사이드바
@@ -146,8 +146,9 @@ with st.sidebar:
         "**데이터 출처**\n"
         "- 지역·좌표: 실제 행정구역\n"
         "- 인구감소지역: 행안부 고시 제2024-15호\n"
-        "- 통계 범위: 교육부 초등돌봄(2023), 통계청 맞벌이가구(2023)\n"
-        "- 개별 수치: 추정 시뮬레이션"
+        "- 이용인원·학교수: 교육부 초등돌봄 현황 ('23.4월) **실측**\n"
+        "- 맞벌이·출산율: 통계청 2023 **실측**\n"
+        "- 정원·대기자: 역산 추정 (공공 미공개)"
     )
 
 # ── 메인 헤더
@@ -258,10 +259,16 @@ with tab2:
         m1.metric("초등학생", f"{detail['students']:,}명")
         m2.metric("맞벌이 가구", f"{detail['dual_pct']}%")
         m3.metric("한부모 가구", f"{detail['single_pct']}%")
-        m1.metric("돌봄 대기자", f"{detail['waitlist']}명")
-        m2.metric("이용률", f"{detail['util_rate']}%")
+        m1.metric("돌봄 대기자", f"{detail['waitlist']}명",
+                  help="시뮬레이션 추정값 (시군구 단위 공공 미공개)")
+        m2.metric("이용률", f"{detail['util_rate']}%",
+                  help="실측 이용인원 ÷ 추정 정원")
         m3.metric("인구감소지역", "예" if detail["decline"] else "아니오")
-        m1.metric("합계출산율", f"{detail['birth_rate']}명",
+        m1.metric("실측 이용인원", f"{detail['care_enrolled']:,}명",
+                  help="교육부 초등돌봄교실 현황 2023년 4월 기준 실측값")
+        m2.metric("돌봄교실 학교 수", f"{detail['school_count']}개교",
+                  help="교육부 초등돌봄교실 현황 2023년 4월 기준 실측값")
+        m3.metric("합계출산율", f"{detail['birth_rate']}명",
                   help="통계청 2023년 기준 (전국 평균 0.72명)")
 
         # 데이터 출처 표기

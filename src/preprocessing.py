@@ -50,9 +50,9 @@ def get_region_detail(df: pd.DataFrame, region_id: str) -> dict:
         "top3":         row["top3_list"],
         "decline":      bool(row["decline"]),
         "urban":        bool(row["urban"]),
-        "note":         str(row.get("region_note", "")),
-        "data_note":    str(row.get("data_note", "")),
-        "birth_rate":   float(row.get("birth_rate", 0)),
+        "note":         str(row["region_note"]) if "region_note" in row.index else "",
+        "data_note":    str(row["data_note"])   if "data_note"   in row.index else "",
+        "birth_rate":   float(row["birth_rate"]) if "birth_rate" in row.index else 0.0,
     }
 
 def simulate_budget(df: pd.DataFrame, budget_m: int, threshold: float = 0.2) -> pd.DataFrame:

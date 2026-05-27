@@ -50,8 +50,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── 데이터 로드 & 모델 초기화
+# cache_version: 컬럼 구조가 바뀔 때 올려서 Streamlit Cloud 캐시 강제 무효화
 @st.cache_data
-def load():
+def load(cache_version: int = 3):
     df = load_data()
     return df
 
@@ -60,7 +61,7 @@ def init_models(df):
     ensure_trained(df)
     return load_models()
 
-df = load()
+df = load(cache_version=3)
 reg, clf, scaler = init_models(df)
 
 # ── 사이드바

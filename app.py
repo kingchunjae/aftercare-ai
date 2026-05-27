@@ -213,6 +213,12 @@ with tab2:
         m1.metric("돌봄 대기자", f"{detail['waitlist']}명")
         m2.metric("이용률", f"{detail['util_rate']}%")
         m3.metric("인구감소지역", "예" if detail["decline"] else "아니오")
+        m1.metric("합계출산율", f"{detail['birth_rate']}명",
+                  help="통계청 2023년 기준 (전국 평균 0.72명)")
+
+        # 데이터 출처 표기
+        if detail.get("data_note"):
+            st.caption(f"📊 출처: {detail['data_note']}")
 
         st.markdown('<p class="section-header">불균형 지수</p>', unsafe_allow_html=True)
         st.plotly_chart(imbal_gauge(detail["imbal_idx"], t), use_container_width=True)

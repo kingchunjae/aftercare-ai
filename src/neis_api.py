@@ -1,13 +1,24 @@
 """src/neis_api.py — NEIS Open API 클라이언트
 
-지원 엔드포인트
-  SchoolInfo     : 학교 기본 정보 (코드·주소·시도교육청코드)
-  AftShoSeatInfo : 방과후학교 수강신청 현황 (강좌별 정원 합산 → 학교별 참여 정원)
+[NEIS API 제공 범위 (2024년 기준)]
+  schoolInfo      : 학교기본정보 — 학교명·주소·학교코드 ✅
+  mealServiceDietInfo : 급식식단정보 ✅
+  elsTimetableDi  : 초등 시간표 ✅
+
+[방과후학교 참여인원 관련]
+  AftShoSeatInfo / AftShoOprInfo : 이 API 키로 접근 불가 (미제공 서비스)
+  → 대안: schoolInfo로 실측 학교 수를 확보 후,
+          교육부 전국 참여율(52.9%) 기반 결정론적 계산 적용
+          (source = "NEIS기반추정")
 
 사용법
-  from src.neis_api import build_afterschool_cache
-  cache = build_afterschool_cache(api_key="YOUR_KEY", year="2023")
-  # → {"GJ01": {"enrolled": 1234, "source": "NEIS실측", "year": "2023"}, ...}
+  from src.neis_api import build_school_cache
+  cache = build_school_cache(api_key="YOUR_KEY")
+  # → {
+  #     "GJ01": {"school_count": 11, "source": "NEIS실측"},
+  #     "JN01": {"school_count": 34, "source": "NEIS실측"},
+  #     ...
+  #   }
 """
 
 import requests
@@ -15,9 +26,16 @@ import time
 from collections import defaultdict
 from typing import Optional
 
-NEIS_BASE   = "https://open.neis.go.kr/hub"
-SIDO_CODES  = {"B10": "광주광역시", "J10": "전라남도"}
-PAGE_SIZE   = 1000   # NEIS 최대 1000건/페이지
+NEIS_BASE  = "https://open.neis.go.kr/hub"
+PAGE_SIZE  = 1000
+
+# ─────────────────────────────────────────────────────
+# 시도교육청 코드 (NEIS 공식)
+# B10=서울, C10=부산, D10=대구, E10=인천, F10=광주, G10=대전
+# H10=울산, I10=세종, J10=경기, K10=강원, M10=충북, N10=충남
+# P10=전북, Q10=전남, R10=경북, S10=경남, T10=제주
+# ─────────────────────────────────────────────────────
+SIDO_CODES = {"F10": "광주광역시교육청", "Q10": "전라남도교육청"}
 
 # 시군구 이름 → region_id 매핑
 SIGUNGU_TO_REGION = {
@@ -33,6 +51,15 @@ SIGUNGU_TO_REGION = {
     "구례군":  "JN16", "고흥군": "JN17", "장흥군": "JN18",
     "강진군":  "JN19", "완도군": "JN20", "진도군": "JN21",
     "신안군":  "JN22",
+}
+
+# 유형별 방과후학교 참여율 (전국 평균 52.9% 기준, 교육부 2024.04)
+# 도심(C/D)은 높고, 농촌 오지(A/B)는 낮게 설정
+AFTERSCHOOL_RATE_FIXED = {
+    "A": 0.22,   # 농촌 오지: 접근성 낮음
+    "B": 0.36,   # 인구감소 군: 시설 있으나 학생 급감
+    "C": 0.65,   # 도심 성장: 맞벌이 집중
+    "D": 0.565,  # 균형 중소도시: 전국 평균 수준
 }
 
 
@@ -55,7 +82,7 @@ def _get(endpoint: str, params: dict, retries: int = 3) -> list[dict]:
                 resp = requests.get(
                     f"{NEIS_BASE}/{endpoint}",
                     params=params,
-                    timeout=15,
+                    timeout=20,
                 )
                 resp.raise_for_status()
                 break
@@ -65,214 +92,107 @@ def _get(endpoint: str, params: dict, retries: int = 3) -> list[dict]:
                 time.sleep(1.5 * (attempt + 1))
 
         data = resp.json()
-
-        # 에러 응답 처리
         if endpoint not in data:
-            # RESULT 키만 있는 경우 → 데이터 없음
-            return rows
+            return rows   # 서비스 미존재 또는 결과 없음
 
-        payload = data[endpoint]
+        payload    = data[endpoint]
         head_block = payload[0]["head"]
-        result_info = head_block[1]["RESULT"]
-        code = result_info.get("CODE", "")
-        if code not in ("INFO-000", "INFO-200"):
-            # INFO-200: 해당 정보 없음 (정상이지만 데이터 없음)
+        code       = head_block[1]["RESULT"].get("CODE", "")
+        if code == "INFO-200":
+            return rows  # 정상이지만 데이터 없음
+        if code != "INFO-000":
             return rows
 
-        total = int(head_block[0]["list_total_count"])
+        total     = int(head_block[0]["list_total_count"])
         page_rows = payload[1].get("row", [])
         rows.extend(page_rows)
 
         if len(rows) >= total or len(page_rows) < PAGE_SIZE:
             break
         page += 1
-        time.sleep(0.05)   # API 부하 방지
+        time.sleep(0.05)
 
     return rows
 
 
 def extract_sigungu(address: str) -> Optional[str]:
-    """도로명·지번 주소에서 시군구 이름을 추출하여 region_id로 변환.
+    """도로명·지번 주소에서 시군구 이름 추출 → region_id 반환.
 
-    예) '광주광역시 동구 금남로1가 10' → 'GJ01'
-        '전라남도 목포시 영산로 ...' → 'JN01'
+    예) '광주광역시 북구 각화대로39번길 10' → 'GJ04'
+        '전라남도 목포시 영산로 ...'        → 'JN01'
     """
     if not address:
         return None
     parts = address.split()
-    # 1번째 토큰: 시도 / 2번째 토큰: 시군구
-    if len(parts) >= 2:
-        sigungu = parts[1]
-        if sigungu in SIGUNGU_TO_REGION:
-            return SIGUNGU_TO_REGION[sigungu]
-    return None
+    sigungu = parts[1] if len(parts) >= 2 else ""
+    return SIGUNGU_TO_REGION.get(sigungu)
 
 
 # ─────────────────────────────────────────────────────
 # 공개 API 함수
 # ─────────────────────────────────────────────────────
 
-def fetch_schools(api_key: str) -> dict[str, str]:
-    """광주·전남 초등학교 코드 → region_id 매핑 딕셔너리 반환.
+def fetch_school_counts(api_key: str) -> dict[str, int]:
+    """NEIS schoolInfo API로 광주·전남 초등학교 수를 시군구별로 집계.
 
-    SchoolInfo 엔드포인트에서 주소(ORG_RDNMA)를 파싱하여 시군구 추출.
+    반환: {region_id: school_count}  (NEIS 실측)
     """
-    school_to_region: dict[str, str] = {}
-    for sido_code in SIDO_CODES:
+    region_counts: dict[str, int] = defaultdict(int)
+
+    for sido_code, sido_name in SIDO_CODES.items():
         params = {
-            "KEY": api_key,
+            "KEY":                api_key,
             "ATPT_OFCDC_SC_CODE": sido_code,
             "SCHUL_KND_SC_NM":    "초등학교",
         }
         try:
-            rows = _get("SchoolInfo", params)
+            rows = _get("schoolInfo", params)
         except Exception as e:
-            print(f"  [WARN] SchoolInfo 조회 실패 ({sido_code}): {e}")
+            print(f"  [WARN] schoolInfo 조회 실패 ({sido_code}/{sido_name}): {e}")
             continue
 
         for row in rows:
-            code    = row.get("SD_SCHUL_CODE", "")
-            address = row.get("ORG_RDNMA", "")
+            address   = row.get("ORG_RDNMA", "")
             region_id = extract_sigungu(address)
-            if code and region_id:
-                school_to_region[code] = region_id
+            if region_id:
+                region_counts[region_id] += 1
 
-    print(f"  [INFO] 학교 매핑 완료: {len(school_to_region)}개교")
-    return school_to_region
+        print(f"  [INFO] {sido_name} 초등학교: {len(rows)}개교 조회 완료")
 
-
-def fetch_afterschool_seats(
-    api_key: str,
-    year: str,
-    school_to_region: dict[str, str],
-) -> dict[str, int]:
-    """AftShoSeatInfo 엔드포인트로 방과후학교 수강정원 합산.
-
-    반환: {region_id: total_seat_count}
-    """
-    region_seats: dict[str, int] = defaultdict(int)
-
-    for sido_code in SIDO_CODES:
-        params = {
-            "KEY":               api_key,
-            "ATPT_OFCDC_SC_CODE": sido_code,
-            "AY":                year,   # 학년도 (예: '2023')
-        }
-        try:
-            rows = _get("AftShoSeatInfo", params)
-        except Exception as e:
-            print(f"  [WARN] AftShoSeatInfo 조회 실패 ({sido_code}): {e}")
-            continue
-
-        for row in rows:
-            school_code = row.get("SD_SCHUL_CODE", "")
-            seat_cnt    = row.get("SBCJT_SEAT_CNT", 0)
-            region_id   = school_to_region.get(school_code)
-            if region_id and seat_cnt:
-                try:
-                    region_seats[region_id] += int(seat_cnt)
-                except (ValueError, TypeError):
-                    pass
-
-        print(f"  [INFO] {SIDO_CODES[sido_code]} AftShoSeatInfo: {len(rows)}건")
-
-    return dict(region_seats)
-
-
-def fetch_afterschool_opr(
-    api_key: str,
-    year: str,
-    school_to_region: dict[str, str],
-) -> dict[str, int]:
-    """AftShoOprInfo 엔드포인트로 방과후학교 수강인원 합산 (fallback용).
-
-    반환: {region_id: total_enrolled}
-    """
-    region_enr: dict[str, int] = defaultdict(int)
-
-    for sido_code in SIDO_CODES:
-        params = {
-            "KEY":               api_key,
-            "ATPT_OFCDC_SC_CODE": sido_code,
-            "AY":                year,
-        }
-        try:
-            rows = _get("AftShoOprInfo", params)
-        except Exception as e:
-            print(f"  [WARN] AftShoOprInfo 조회 실패 ({sido_code}): {e}")
-            continue
-
-        for row in rows:
-            school_code = row.get("SD_SCHUL_CODE", "")
-            # 강좌 수강인원 필드명 탐색
-            enrolled = 0
-            for field in ("CLRM_ENRL_CNT", "ENRL_CNT", "SBCJT_ENRL_CNT"):
-                v = row.get(field)
-                if v:
-                    try:
-                        enrolled = int(v)
-                        break
-                    except (ValueError, TypeError):
-                        pass
-            region_id = school_to_region.get(school_code)
-            if region_id and enrolled:
-                region_enr[region_id] += enrolled
-
-        print(f"  [INFO] {SIDO_CODES[sido_code]} AftShoOprInfo: {len(rows)}건")
-
-    return dict(region_enr)
+    return dict(region_counts)
 
 
 # ─────────────────────────────────────────────────────
 # 메인 빌더
 # ─────────────────────────────────────────────────────
 
-def build_afterschool_cache(
-    api_key: str,
-    year: str = "2023",
-) -> dict[str, dict]:
-    """NEIS API를 호출하여 방과후학교 참여정원 캐시를 생성.
+def build_school_cache(api_key: str) -> dict[str, dict]:
+    """NEIS schoolInfo API로 시군구별 초등학교 수 캐시 생성.
 
     반환 형식:
     {
-      "GJ01": {"enrolled": 1234, "source": "NEIS실측", "year": "2023"},
-      "JN01": {"enrolled": 567,  "source": "NEIS실측", "year": "2023"},
+      "GJ01": {"school_count": 11, "source": "NEIS실측"},
+      "JN01": {"school_count": 34, "source": "NEIS실측"},
       ...
     }
-    데이터를 가져오지 못한 지역은 포함되지 않음 (generate_data.py에서 추정값 사용).
     """
-    print(f"\n[NEIS] 방과후학교 데이터 조회 시작 (학년도: {year})")
-    print("[STEP 1] 학교 코드 → 지역 매핑 조회...")
-    school_to_region = fetch_schools(api_key)
+    print(f"\n[NEIS] 초등학교 실측 데이터 조회 시작")
+    print(f"  API: {NEIS_BASE}/schoolInfo")
+    print(f"  대상: 광주(F10) + 전남(Q10) 초등학교")
 
-    if not school_to_region:
-        print("[WARN] 학교 매핑 정보를 가져오지 못했습니다. API 키를 확인하세요.")
+    counts = fetch_school_counts(api_key)
+
+    if not counts:
+        print("[WARN] 학교 수 데이터를 가져오지 못했습니다. API 키를 확인하세요.")
         return {}
 
-    print("[STEP 2] 방과후학교 수강정원 조회 (AftShoSeatInfo)...")
-    seat_data = fetch_afterschool_seats(api_key, year, school_to_region)
+    cache = {
+        rid: {"school_count": cnt, "source": "NEIS실측"}
+        for rid, cnt in counts.items()
+        if cnt > 0
+    }
 
-    # AftShoSeatInfo로 데이터를 가져오지 못한 경우 OprInfo 시도
-    if not seat_data:
-        print("[STEP 2b] AftShoSeatInfo 없음 → AftShoOprInfo 시도...")
-        seat_data = fetch_afterschool_opr(api_key, year, school_to_region)
-
-    cache = {}
-    for region_id, count in seat_data.items():
-        if count > 0:
-            cache[region_id] = {
-                "enrolled": count,
-                "source":   "NEIS실측",
-                "year":     year,
-            }
-
-    covered = len(cache)
-    total   = len(SIGUNGU_TO_REGION)
-    print(f"\n[NEIS] 완료: {covered}/{total}개 지역 실측 데이터 확보")
-    if covered < total:
-        missing = [r for r in SIGUNGU_TO_REGION.values() if r not in cache]
-        print(f"  미확보 지역 ({len(missing)}개): {', '.join(missing[:10])}"
-              + (" ..." if len(missing) > 10 else ""))
-        print("  → generate_data.py에서 해당 지역은 추정값 사용")
+    total_schools = sum(c["school_count"] for c in cache.values())
+    print(f"\n[완료] {len(cache)}/27개 지역 · 총 {total_schools}개교 실측")
 
     return cache

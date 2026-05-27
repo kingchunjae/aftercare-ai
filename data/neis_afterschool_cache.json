@@ -1,0 +1,116 @@
+{
+  "fetched_at": "2026-05-27 17:02:30",
+  "api_note": "NEIS Open API - schoolInfo (학교기본정보, 광주F10+전남Q10)",
+  "data_type": "school_count",
+  "coverage": "27/27개 지역",
+  "regions": {
+    "GJ04": {
+      "school_count": 48,
+      "source": "NEIS실측"
+    },
+    "GJ02": {
+      "school_count": 30,
+      "source": "NEIS실측"
+    },
+    "GJ05": {
+      "school_count": 46,
+      "source": "NEIS실측"
+    },
+    "GJ01": {
+      "school_count": 11,
+      "source": "NEIS실측"
+    },
+    "GJ03": {
+      "school_count": 23,
+      "source": "NEIS실측"
+    },
+    "JN22": {
+      "school_count": 25,
+      "source": "NEIS실측"
+    },
+    "JN07": {
+      "school_count": 14,
+      "source": "NEIS실측"
+    },
+    "JN16": {
+      "school_count": 11,
+      "source": "NEIS실측"
+    },
+    "JN19": {
+      "school_count": 13,
+      "source": "NEIS실측"
+    },
+    "JN02": {
+      "school_count": 55,
+      "source": "NEIS실측"
+    },
+    "JN09": {
+      "school_count": 16,
+      "source": "NEIS실측"
+    },
+    "JN10": {
+      "school_count": 22,
+      "source": "NEIS실측"
+    },
+    "JN20": {
+      "school_count": 23,
+      "source": "NEIS실측"
+    },
+    "JN15": {
+      "school_count": 8,
+      "source": "NEIS실측"
+    },
+    "JN21": {
+      "school_count": 17,
+      "source": "NEIS실측"
+    },
+    "JN17": {
+      "school_count": 20,
+      "source": "NEIS실측"
+    },
+    "JN05": {
+      "school_count": 29,
+      "source": "NEIS실측"
+    },
+    "JN04": {
+      "school_count": 24,
+      "source": "NEIS실측"
+    },
+    "JN18": {
+      "school_count": 14,
+      "source": "NEIS실측"
+    },
+    "JN01": {
+      "school_count": 34,
+      "source": "NEIS실측"
+    },
+    "JN11": {
+      "school_count": 16,
+      "source": "NEIS실측"
+    },
+    "JN13": {
+      "school_count": 14,
+      "source": "NEIS실측"
+    },
+    "JN12": {
+      "school_count": 11,
+      "source": "NEIS실측"
+    },
+    "JN03": {
+      "school_count": 42,
+      "source": "NEIS실측"
+    },
+    "JN06": {
+      "school_count": 21,
+      "source": "NEIS실측"
+    },
+    "JN08": {
+      "school_count": 17,
+      "source": "NEIS실측"
+    },
+    "JN14": {
+      "school_count": 13,
+      "source": "NEIS실측"
+    }
+  }
+}

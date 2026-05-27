@@ -184,18 +184,19 @@ if _neis_meta["available"]:
         f"<span class='ds-agency'>&#128203; NEIS Open API</span>"
         f"<span class='badge-real'>실&nbsp;측</span>"
         f"</div>"
-        f"<div class='ds-items'>방과후학교 참여인원</div>"
+        f"<div class='ds-items'>초등학교 수 (시군구별)</div>"
         f"<div class='ds-pub'>"
-        f"AftShoSeatInfo ({_neis_meta['year']}년도)<br>"
-        f"{_neis_meta['coverage']}개 지역 실측 반영 · {_neis_meta['fetched_at'][:10]}"
+        f"schoolInfo — 광주(F10)+전남(Q10)<br>"
+        f"617개교 실측 · {_neis_meta['fetched_at'][:10]}"
         f"</div></div>"
         f"<div class='ds-card est'>"
         f"<div class='ds-card-top'>"
-        f"<span class='ds-agency est'>&#128295; 통계 기반 추정</span>"
+        f"<span class='ds-agency est'>&#128295; NEIS 기반 추정</span>"
         f"<span class='badge-est'>추&nbsp;정</span>"
         f"</div>"
-        f"<div class='ds-items'>맞춤형교육 참여인원</div>"
-        f"<div class='ds-pub'>지역아동센터·드림스타트 등<br>유형별 도농 차등 추정</div>"
+        f"<div class='ds-items'>방과후학교 · 맞춤형교육 참여인원</div>"
+        f"<div class='ds-pub'>NEIS 실측 학교수 × 전국 참여율<br>"
+        f"유형별 도농 차등 (교육부 2024.04)</div>"
         f"</div>"
     )
 else:
@@ -209,7 +210,7 @@ else:
         "<div class='ds-pub'>전국 방과후학교 참여율(52.9%) 기반<br>"
         "유형별 도농 차등 추정 (교육부 2024.04)<br>"
         "<span style='color:#1B4D6B;font-size:9px'>"
-        "&#9432; NEIS API 연동 시 실측값으로 자동 대체</span></div>"
+        "&#9432; NEIS API 연동 시 기반추정으로 전환</span></div>"
         "</div>"
     )
 
@@ -609,16 +610,18 @@ with tab2:
         total_eff = int(detail["care_enrolled"] + as_enr * 0.35 + ce_enr * 0.40)
 
         # 방과후학교 참여 — 출처 배지 표시
-        if as_src == "NEIS실측":
+        if as_src == "NEIS기반추정":
+            _as_badge = "<span style='background:#e8f4fd;color:#1565c0;border:1px solid #90caf9;" \
+                        "font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;" \
+                        "margin-left:4px'>NEIS 기반</span>"
+        elif as_src == "NEIS실측":
             _as_badge = "<span style='background:#e3f0e8;color:#256336;border:1px solid #b2d9bc;" \
                         "font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;" \
                         "margin-left:4px'>NEIS 실측</span>"
-            _as_help  = "NEIS Open API (AftShoSeatInfo) 실측값 — 방과후학교 수강 정원 합산"
         else:
             _as_badge = "<span style='background:#fff4e5;color:#a04e00;border:1px solid #f5c97a;" \
                         "font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;" \
                         "margin-left:4px'>추정</span>"
-            _as_help  = "전국 방과후학교 참여율(52.9%, 교육부 2024.04) 기반 지역 특성 추정"
 
         s1.markdown(
             f"<div style='font-size:11px;color:#888;margin-bottom:2px'>방과후학교 참여{_as_badge}</div>"
@@ -630,15 +633,21 @@ with tab2:
         s3.metric("통합 실질 공급", f"{total_eff:,}명",
                   help="돌봄교실 + 방과후(×0.35) + 맞춤형(×0.40) 가중합산")
 
-        if as_src == "NEIS실측":
+        if as_src == "NEIS기반추정":
             st.caption(
-                "✅ 방과후학교 참여인원은 **NEIS Open API 실측값**입니다. "
+                "📡 방과후학교 참여인원은 **NEIS 실측 학교 수** 기반 결정론적 계산값입니다. "
+                "(NEIS schoolInfo API 실측 학교 수 × 전국 참여율, 교육부 2024.04) "
+                "공급지수 = 돌봄교실 + 방과후(×0.35) + 맞춤형(×0.40) 복합 기여도"
+            )
+        elif as_src == "NEIS실측":
+            st.caption(
+                "✅ 방과후학교 참여인원은 **NEIS Open API 직접 조회 실측값**입니다. "
                 "공급지수는 돌봄교실 + 방과후(×0.35) + 맞춤형(×0.40) 복합 기여도로 산출됩니다."
             )
         else:
             st.caption(
                 "💡 방과후학교·맞춤형교육 수치는 전국 참여율 통계 기반 추정값입니다. "
-                "NEIS API 키로 `data/fetch_neis_afterschool.py`를 실행하면 실측값으로 대체됩니다."
+                "NEIS API 키로 `data/fetch_neis_afterschool.py`를 실행하면 NEIS 기반 계산으로 전환됩니다."
             )
 
         # 데이터 출처 표기

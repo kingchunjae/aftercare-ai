@@ -144,7 +144,7 @@ st.markdown("""
 # ── 데이터 로드 & 모델 초기화
 # cache_version: 컬럼 구조가 바뀔 때 올려서 Streamlit Cloud 캐시 강제 무효화
 @st.cache_data
-def load(cache_version: int = 4):
+def load(cache_version: int = 5):
     df = load_data()
     return df
 
@@ -153,7 +153,7 @@ def init_models(df):
     ensure_trained(df)
     return load_models()
 
-df = load(cache_version=4)
+df = load(cache_version=5)
 reg, clf, scaler = init_models(df)
 
 # ── 사이드바
@@ -246,6 +246,15 @@ with st.sidebar:
     </div>
     <div class="ds-items">초등학생 수 (시군구별)</div>
     <div class="ds-pub">경향신문 2024.02<br>시사저널 2025</div>
+  </div>
+
+  <div class="ds-card est">
+    <div class="ds-card-top">
+      <span class="ds-agency est">🔧 통계 기반 추정</span>
+      <span class="badge-est">추&nbsp;정</span>
+    </div>
+    <div class="ds-items">방과후학교 · 맞춤형교육 참여인원</div>
+    <div class="ds-pub">전국 방과후학교 참여율(52.9%) 기반<br>유형별 도농 차등 추정 (교육부 2024.04)</div>
   </div>
 
   <div class="ds-card est">
@@ -378,12 +387,30 @@ with tab2:
         m2.metric("이용률", f"{detail['util_rate']}%",
                   help="실측 이용인원 ÷ 추정 정원")
         m3.metric("인구감소지역", "예" if detail["decline"] else "아니오")
-        m1.metric("실측 이용인원", f"{detail['care_enrolled']:,}명",
+        m1.metric("돌봄교실 이용인원", f"{detail['care_enrolled']:,}명",
                   help="교육부 초등돌봄교실 현황 2023년 4월 기준 실측값")
         m2.metric("돌봄교실 학교 수", f"{detail['school_count']}개교",
                   help="교육부 초등돌봄교실 현황 2023년 4월 기준 실측값")
         m3.metric("합계출산율", f"{detail['birth_rate']}명",
                   help="통계청 2023년 기준 (전국 평균 0.72명)")
+
+        # ── 3줄: 방과후·맞춤형 공급 지표
+        st.markdown('<p class="section-header">방과후·맞춤형 돌봄 공급</p>',
+                    unsafe_allow_html=True)
+        s1, s2, s3 = st.columns(3)
+        as_enr = detail.get("afterschool_enrolled", 0)
+        ce_enr = detail.get("custom_edu_enrolled", 0)
+        total_eff = int(detail["care_enrolled"] + as_enr * 0.35 + ce_enr * 0.40)
+        s1.metric("방과후학교 참여", f"{as_enr:,}명",
+                  help="전국 방과후학교 참여율(52.9%, 교육부 2024.04) 기반 지역 특성 추정")
+        s2.metric("맞춤형교육 참여", f"{ce_enr:,}명",
+                  help="지역아동센터·아이돌봄서비스·드림스타트 등 추정")
+        s3.metric("통합 실질 공급", f"{total_eff:,}명",
+                  help="돌봄교실 + 방과후(×0.35) + 맞춤형(×0.40) 가중합산")
+        st.caption(
+            "💡 방과후학교·맞춤형교육 수치는 전국 참여율 통계 기반 추정값입니다. "
+            "공급지수는 이 세 가지 프로그램의 복합 기여도로 산출됩니다."
+        )
 
         # 데이터 출처 표기
         if detail.get("data_note"):
@@ -391,10 +418,15 @@ with tab2:
 
         st.markdown('<p class="section-header">불균형 지수</p>', unsafe_allow_html=True)
         st.plotly_chart(imbal_gauge(detail["imbal_idx"], t), use_container_width=True)
+        balance_label = (
+            "공급 부족" if detail['imbal_idx'] > 1.2
+            else "공급 과잉" if detail['imbal_idx'] < 0.8
+            else "균형"
+        )
         st.caption(
-            f"수요 지수 {detail['demand_idx']:.3f} ÷ 공급 지수 {detail['supply_idx']:.3f}"
-            f" = **{detail['imbal_idx']:.3f}** "
-            f"({'공급 부족' if detail['imbal_idx'] > 1.2 else '공급 과잉' if detail['imbal_idx'] < 0.8 else '균형'})"
+            f"수요 지수 {detail['demand_idx']:.3f} ÷ 복합 공급 지수 {detail['supply_idx']:.3f}"
+            f" = **{detail['imbal_idx']:.3f}** ({balance_label})\n\n"
+            f"공급 지수 = (돌봄교실 + 방과후학교×0.35 + 맞춤형교육×0.40) ÷ 초등학생 수"
         )
 
     with col_r:

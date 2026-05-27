@@ -223,15 +223,41 @@ REGIONS = [
 ]
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Step 3. 유형별 파라미터 (정원 역산용 이용률·대기자 범위)
+# Step 3. 유형별 파라미터
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# 이용률 범위: 교육부 공표 유형별 기준 (공급부족 지역 → 높음, 과잉 지역 → 낮음)
+# 초등돌봄교실 이용률 범위 (정원 역산 기준)
 SPECS = {
     "A": dict(util_range=(0.85, 0.99), wait_range=(40,  220)),
     "B": dict(util_range=(0.18, 0.42), wait_range=(0,    20)),
     "C": dict(util_range=(0.90, 0.99), wait_range=(100, 420)),
     "D": dict(util_range=(0.55, 0.80), wait_range=(5,    65)),
 }
+
+# ── 방과후학교 참여율 범위 (교육부 2024.04 전국 52.9% 기준, 도농 차등 적용)
+# 도심(C/D): 서울·광역시 기준 60-70% 수준, 농촌(A/B): 15-44%
+AFTERSCHOOL_RATE = {
+    "A": (0.15, 0.28),   # 농촌 오지: 접근성 낮음, 낮은 참여율
+    "B": (0.28, 0.44),   # 인구감소 군: 시설 있으나 학생 급감
+    "C": (0.58, 0.72),   # 도심 성장: 맞벌이 집중, 높은 참여율
+    "D": (0.48, 0.65),   # 균형 중소도시: 전국 평균 수준
+}
+
+# ── 맞춤형교육 참여율 범위 (지역아동센터·아이돌봄서비스·드림스타트 등)
+# 농촌 취약지역에 집중 지원, 도심은 비율 낮음
+CUSTOM_EDU_RATE = {
+    "A": (0.07, 0.13),
+    "B": (0.04, 0.08),
+    "C": (0.03, 0.06),
+    "D": (0.02, 0.05),
+}
+
+# ── 돌봄 수요 해소 기여 가중치
+# 방과후학교: 방과 후 2-4시간 교육·체험 프로그램, 완전한 돌봄 대체 아님
+#   → 1명 참여 = 돌봄교실 0.35명분 수요 해소
+# 맞춤형교육(지역아동센터 등): 종일 운영, 취약계층 집중
+#   → 1명 참여 = 돌봄교실 0.40명분 수요 해소
+AS_WEIGHT  = 0.35
+CE_WEIGHT  = 0.40
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Step 4. 데이터 생성
@@ -257,8 +283,15 @@ for r in REGIONS:
     # ── 실제 이용률
     util_rate = round(c_enr / c_cap * 100, 1) if c_cap > 0 else 0.0
 
-    # ── 방과후 정원 (전체 정원의 45~65%)
-    a_cap = int(c_cap * g.uniform(0.45, 0.65))
+    # ── 방과후학교 참여인원 추정 (전국 참여율 52.9% 기준, 지역 특성 차등)
+    as_rate        = g.uniform(*AFTERSCHOOL_RATE[r["t"]])
+    afterschool_enr = int(stu * as_rate)
+    # 방과후학교 정원 추정: 참여인원 ÷ 이용률(80-92%)
+    afterschool_cap = max(int(afterschool_enr / g.uniform(0.80, 0.92)), afterschool_enr + 1)
+
+    # ── 맞춤형교육 참여인원 추정 (지역아동센터·아이돌봄·드림스타트 등)
+    ce_rate      = g.uniform(*CUSTOM_EDU_RATE[r["t"]])
+    custom_enr   = int(stu * ce_rate)
 
     # ── 대기자 시뮬레이션 (공공 미공개)
     wait = int(g.integers(*sp["wait_range"]))
@@ -273,9 +306,14 @@ for r in REGIONS:
 
     area = round(g.uniform(15, 90), 1) if r["t"] == "C" else round(g.uniform(100, 800), 1)
 
-    # ── 지수 산출
+    # ── 통합 공급 지수 산출 ─────────────────────────────────────
+    # 기존: supply_idx = 돌봄교실 정원 / 초등학생 수
+    # 개선: 돌봄교실 + 방과후학교(×0.35) + 맞춤형교육(×0.40) 복합 지수
+    #   - 방과후학교 가중치 0.35: 2-4시간 부분 돌봄, 완전 대체 아님
+    #   - 맞춤형교육 가중치 0.40: 종일 운영이나 소규모·취약계층 집중
+    effective_supply = c_cap + afterschool_enr * AS_WEIGHT + custom_enr * CE_WEIGHT
     dem  = round(dual / 100, 4)
-    sup  = round(c_cap / max(stu, 1), 4)
+    sup  = round(effective_supply / max(stu, 1), 4)
     sup  = max(sup, 0.01)
     imb  = round(dem / sup, 4)
     dem5 = round(dem * (1 + bchg / 100 * 0.6), 4)
@@ -286,37 +324,39 @@ for r in REGIONS:
     ))
 
     rows.append({
-        "region_id":         rid,
-        "name":              r["name"],
-        "lat":               r["lat"],
-        "lon":               r["lon"],
-        "urban":             r["t"] == "C",
-        "decline":           r["decline"],
-        "students":          stu,
-        "dual_income_pct":   dual,
-        "single_parent_pct": sing,
-        "area_km2":          area,
-        "births_5y":         births,
-        "births_proj_5y":    births_p,
-        "birth_change_pct":  bchg,
-        "school_count":      n_school,        # ★ 실측
-        "afterschool_cap":   a_cap,
-        "care_cap":          c_cap,           # 역산 추정
-        "care_enrolled":     c_enr,           # ★ 실측
-        "care_waitlist":     wait,            # 시뮬레이션
-        "care_util_rate":    util_rate,       # 실측 기반 산출
-        "demand_idx":        dem,
-        "supply_idx":        sup,
-        "imbal_idx":         imb,
-        "demand_idx_5y":     dem5,
-        "region_type":       r["t"],
-        "type_color":        TYPE_COLORS[r["t"]],
-        "type_label":        TYPE_LABELS[r["t"]],
-        "top3_features":     "|".join(TOP3_F[r["t"]]),
-        "risk_score":        rs,
-        "birth_rate":        br,
-        "region_note":       r.get("region_note", ""),
-        "data_note":         r.get("data_note", ""),
+        "region_id":            rid,
+        "name":                 r["name"],
+        "lat":                  r["lat"],
+        "lon":                  r["lon"],
+        "urban":                r["t"] == "C",
+        "decline":              r["decline"],
+        "students":             stu,
+        "dual_income_pct":      dual,
+        "single_parent_pct":    sing,
+        "area_km2":             area,
+        "births_5y":            births,
+        "births_proj_5y":       births_p,
+        "birth_change_pct":     bchg,
+        "school_count":         n_school,           # ★ 실측
+        "care_cap":             c_cap,              # 역산 추정
+        "care_enrolled":        c_enr,              # ★ 실측
+        "care_waitlist":        wait,               # 시뮬레이션
+        "care_util_rate":       util_rate,          # 실측 기반 산출
+        "afterschool_enrolled": afterschool_enr,    # 추정 (전국 참여율 기반)
+        "afterschool_cap":      afterschool_cap,    # 추정
+        "custom_edu_enrolled":  custom_enr,         # 추정 (지역아동센터 등)
+        "demand_idx":           dem,
+        "supply_idx":           sup,                # 복합 공급 지수
+        "imbal_idx":            imb,
+        "demand_idx_5y":        dem5,
+        "region_type":          r["t"],
+        "type_color":           TYPE_COLORS[r["t"]],
+        "type_label":           TYPE_LABELS[r["t"]],
+        "top3_features":        "|".join(TOP3_F[r["t"]]),
+        "risk_score":           rs,
+        "birth_rate":           br,
+        "region_note":          r.get("region_note", ""),
+        "data_note":            r.get("data_note", ""),
     })
 
 df = pd.DataFrame(rows)
@@ -325,4 +365,5 @@ df.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
 print(f"\n생성 완료: {len(df)}개 / 유형 분포: {df['region_type'].value_counts().to_dict()}")
 print(f"실측 이용인원 반영: {(df['care_enrolled'] > 0).sum()}개 지역")
 print()
-print(df[["name", "region_type", "care_enrolled", "care_cap", "care_util_rate", "risk_score"]].to_string(index=False))
+print(df[["name","region_type","care_enrolled","afterschool_enrolled","custom_edu_enrolled",
+          "supply_idx","imbal_idx","risk_score"]].to_string(index=False))

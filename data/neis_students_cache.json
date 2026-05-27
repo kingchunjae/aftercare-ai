@@ -1,0 +1,173 @@
+{
+  "fetched_at": "2026-05-27 17:27:30",
+  "api_note": "NEIS Open API - classInfo(AY=2025) × KEDI 학급당 학생수(2024)",
+  "data_type": "students_from_class_count",
+  "method": "classInfo 실측 학급수 × 시군구별 KEDI 학급당 학생수",
+  "coverage": "27/27개 지역",
+  "total_students": 135972,
+  "total_classes": 8456,
+  "regions": {
+    "GJ04": {
+      "students": 20494,
+      "class_count": 1051,
+      "class_size": 19.5,
+      "source": "NEIS학급기반"
+    },
+    "GJ02": {
+      "students": 12812,
+      "class_count": 657,
+      "class_size": 19.5,
+      "source": "NEIS학급기반"
+    },
+    "GJ01": {
+      "students": 3842,
+      "class_count": 197,
+      "class_size": 19.5,
+      "source": "NEIS학급기반"
+    },
+    "GJ03": {
+      "students": 11232,
+      "class_count": 576,
+      "class_size": 19.5,
+      "source": "NEIS학급기반"
+    },
+    "GJ05": {
+      "students": 22990,
+      "class_count": 1179,
+      "class_size": 19.5,
+      "source": "NEIS학급기반"
+    },
+    "JN22": {
+      "students": 913,
+      "class_count": 117,
+      "class_size": 7.8,
+      "source": "NEIS학급기반"
+    },
+    "JN07": {
+      "students": 1251,
+      "class_count": 106,
+      "class_size": 11.8,
+      "source": "NEIS학급기반"
+    },
+    "JN16": {
+      "students": 604,
+      "class_count": 71,
+      "class_size": 8.5,
+      "source": "NEIS학급기반"
+    },
+    "JN09": {
+      "students": 1064,
+      "class_count": 112,
+      "class_size": 9.5,
+      "source": "NEIS학급기반"
+    },
+    "JN19": {
+      "students": 909,
+      "class_count": 101,
+      "class_size": 9.0,
+      "source": "NEIS학급기반"
+    },
+    "JN02": {
+      "students": 10643,
+      "class_count": 657,
+      "class_size": 16.2,
+      "source": "NEIS학급기반"
+    },
+    "JN10": {
+      "students": 1870,
+      "class_count": 170,
+      "class_size": 11.0,
+      "source": "NEIS학급기반"
+    },
+    "JN20": {
+      "students": 1558,
+      "class_count": 159,
+      "class_size": 9.8,
+      "source": "NEIS학급기반"
+    },
+    "JN15": {
+      "students": 500,
+      "class_count": 61,
+      "class_size": 8.2,
+      "source": "NEIS학급기반"
+    },
+    "JN21": {
+      "students": 774,
+      "class_count": 90,
+      "class_size": 8.6,
+      "source": "NEIS학급기반"
+    },
+    "JN05": {
+      "students": 6526,
+      "class_count": 421,
+      "class_size": 15.5,
+      "source": "NEIS학급기반"
+    },
+    "JN17": {
+      "students": 1297,
+      "class_count": 141,
+      "class_size": 9.2,
+      "source": "NEIS학급기반"
+    },
+    "JN04": {
+      "students": 4973,
+      "class_count": 336,
+      "class_size": 14.8,
+      "source": "NEIS학급기반"
+    },
+    "JN18": {
+      "students": 924,
+      "class_count": 105,
+      "class_size": 8.8,
+      "source": "NEIS학급기반"
+    },
+    "JN01": {
+      "students": 8690,
+      "class_count": 550,
+      "class_size": 15.8,
+      "source": "NEIS학급기반"
+    },
+    "JN13": {
+      "students": 1378,
+      "class_count": 123,
+      "class_size": 11.2,
+      "source": "NEIS학급기반"
+    },
+    "JN11": {
+      "students": 1544,
+      "class_count": 147,
+      "class_size": 10.5,
+      "source": "NEIS학급기반"
+    },
+    "JN12": {
+      "students": 660,
+      "class_count": 75,
+      "class_size": 8.8,
+      "source": "NEIS학급기반"
+    },
+    "JN03": {
+      "students": 11550,
+      "class_count": 700,
+      "class_size": 16.5,
+      "source": "NEIS학급기반"
+    },
+    "JN06": {
+      "students": 3807,
+      "class_count": 282,
+      "class_size": 13.5,
+      "source": "NEIS학급기반"
+    },
+    "JN08": {
+      "students": 2001,
+      "class_count": 164,
+      "class_size": 12.2,
+      "source": "NEIS학급기반"
+    },
+    "JN14": {
+      "students": 1166,
+      "class_count": 108,
+      "class_size": 10.8,
+      "source": "NEIS학급기반"
+    }
+  }
+}

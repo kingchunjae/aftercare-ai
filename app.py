@@ -164,7 +164,7 @@ _neis_meta = _load_neis_meta()
 # ── 데이터 로드 & 모델 초기화
 # cache_version: 컬럼 구조가 바뀔 때 올려서 Streamlit Cloud 캐시 강제 무효화
 @st.cache_data
-def load(cache_version: int = 7):
+def load(cache_version: int = 8):
     df = load_data()
     return df
 
@@ -173,7 +173,7 @@ def init_models(df):
     ensure_trained(df)
     return load_models()
 
-df = load(cache_version=7)
+df = load(cache_version=8)
 reg, clf, scaler = init_models(df)
 
 # ── NEIS 상태에 따른 사이드바 카드 HTML 결정
@@ -330,11 +330,11 @@ with st.sidebar:
 
   <div class="ds-card">
     <div class="ds-card-top">
-      <span class="ds-agency">&#128240; 교육통계·언론</span>
+      <span class="ds-agency">&#128209; NEIS Open API</span>
       <span class="badge-real">실&nbsp;측</span>
     </div>
     <div class="ds-items">초등학생 수 (시군구별)</div>
-    <div class="ds-pub">경향신문 2024.02<br>시사저널 2025</div>
+    <div class="ds-pub">NEIS classInfo(2025학년도)<br>학급수 &times; KEDI 학급당 학생수(2024)</div>
   </div>
 
   {_neis_sidebar_card}
@@ -585,7 +585,18 @@ with tab2:
     with col_l:
         st.markdown('<p class="section-header">핵심 지표</p>', unsafe_allow_html=True)
         m1, m2, m3 = st.columns(3)
-        m1.metric("초등학생", f"{detail['students']:,}명")
+        _stu_src = detail.get("students_source", "추정")
+        _stu_badge = (
+            "<span style='background:#e8f4fd;color:#1565c0;font-size:10px;"
+            "padding:1px 5px;border-radius:8px;font-weight:600;'>NEIS 학급기반</span>"
+            if _stu_src == "NEIS학급기반" else
+            "<span style='background:#fff3e0;color:#e65100;font-size:10px;"
+            "padding:1px 5px;border-radius:8px;font-weight:600;'>추정</span>"
+        )
+        m1.metric("초등학생", f"{detail['students']:,}명",
+                  help=f"출처: {_stu_src} — NEIS classInfo(2025학년도) 실측 학급수 × KEDI 학급당 학생수(2024)"
+                       if _stu_src == "NEIS학급기반" else "출처: 언론 추정 (경향신문 2024, 시사저널 2025)")
+        m1.markdown(_stu_badge, unsafe_allow_html=True)
         m2.metric("맞벌이 가구", f"{detail['dual_pct']}%")
         m3.metric("한부모 가구", f"{detail['single_pct']}%")
         m1.metric("돌봄 대기자", f"{detail['waitlist']}명",

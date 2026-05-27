@@ -23,13 +23,32 @@ import numpy as np
 import pandas as pd
 
 # ── 경로
-DATA_DIR        = os.path.dirname(__file__)
-CARE_FILE       = os.path.join(DATA_DIR, "2023년+초등돌봄교실+현황('23.4월+기준)_최종.xlsx")
-OUTPUT_CSV      = os.path.join(DATA_DIR, "regions.csv")
-NEIS_CACHE_FILE = os.path.join(DATA_DIR, "neis_afterschool_cache.json")
+DATA_DIR              = os.path.dirname(__file__)
+CARE_FILE             = os.path.join(DATA_DIR, "2023년+초등돌봄교실+현황('23.4월+기준)_최종.xlsx")
+OUTPUT_CSV            = os.path.join(DATA_DIR, "regions.csv")
+NEIS_CACHE_FILE       = os.path.join(DATA_DIR, "neis_afterschool_cache.json")
+NEIS_STUDENTS_FILE    = os.path.join(DATA_DIR, "neis_students_cache.json")
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# Step 0. NEIS 방과후학교 캐시 로드 (선택적)
+# Step 0-A. NEIS 학생수 캐시 로드 (classInfo 기반 실측)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NEIS_STUDENTS = {}  # {region_id: {"students": int, "class_count": int, "source": "NEIS학급기반"}}
+if os.path.exists(NEIS_STUDENTS_FILE):
+    try:
+        with open(NEIS_STUDENTS_FILE, "r", encoding="utf-8") as _f:
+            _sc = json.load(_f)
+        NEIS_STUDENTS = _sc.get("regions", {})
+        _sc_covered  = len(NEIS_STUDENTS)
+        _sc_fetched  = _sc.get("fetched_at", "")
+        _sc_total    = _sc.get("total_students", 0)
+        print(f"NEIS 학생수 캐시 로드: {_sc_covered}개 지역 / 총 {_sc_total:,}명 (수집: {_sc_fetched})")
+    except Exception as _e:
+        print(f"[WARN] NEIS 학생수 캐시 로드 실패: {_e} → 기존 추정값 사용")
+else:
+    print("NEIS 학생수 캐시 없음 → 기존 언론 추정값 사용 (fetch_neis_students.py 실행 시 실측 반영)")
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Step 0-B. NEIS 방과후학교 캐시 로드 (학교수 실측)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 NEIS_SCHOOL = {}   # {region_id: {"school_count": int, "source": "NEIS실측"}}
 if os.path.exists(NEIS_CACHE_FILE):
@@ -39,11 +58,11 @@ if os.path.exists(NEIS_CACHE_FILE):
         NEIS_SCHOOL = _cache.get("regions", {})
         _covered   = len(NEIS_SCHOOL)
         _fetched   = _cache.get("fetched_at", "")
-        print(f"NEIS 캐시 로드: {_covered}개 지역 실측 학교 수 반영 (수집: {_fetched})")
+        print(f"NEIS 학교수 캐시 로드: {_covered}개 지역 실측 반영 (수집: {_fetched})")
     except Exception as _e:
-        print(f"[WARN] NEIS 캐시 로드 실패: {_e} → 추정값 사용")
+        print(f"[WARN] NEIS 학교수 캐시 로드 실패: {_e} → 추정값 사용")
 else:
-    print("NEIS 캐시 없음 → 방과후학교 참여인원 추정값 사용")
+    print("NEIS 학교수 캐시 없음 → 방과후학교 참여인원 추정값 사용")
 
 # 유형별 방과후학교 참여율 (결정론적 — 전국 평균 52.9% 기준)
 # 교육부 2024.04 통계 기반, 도농 특성 반영
@@ -298,7 +317,17 @@ for r in REGIONS:
     rid = r["id"]
 
     # ── 실측 수치 ─────────────────────────────────
-    stu      = r["students"]
+    # 초등학생 수: NEIS classInfo 기반 실측 우선, 없으면 기존 언론 추정값
+    neis_stu_data    = NEIS_STUDENTS.get(rid)
+    if neis_stu_data and neis_stu_data.get("students", 0) > 0:
+        stu              = neis_stu_data["students"]
+        students_source  = "NEIS학급기반"
+        students_class   = neis_stu_data.get("class_count", 0)
+    else:
+        stu              = r["students"]
+        students_source  = "추정"
+        students_class   = 0
+
     dual     = r["dual_pct"]
     sing     = r["sing_pct"]
     br       = r["birth_rate"]
@@ -369,19 +398,21 @@ for r in REGIONS:
         "urban":                r["t"] == "C",
         "decline":              r["decline"],
         "students":             stu,
+        "students_source":      students_source,    # "NEIS학급기반" 또는 "추정"
+        "students_class_count": students_class,     # NEIS 학급수 (NEIS학급기반인 경우)
         "dual_income_pct":      dual,
         "single_parent_pct":    sing,
         "area_km2":             area,
         "births_5y":            births,
         "births_proj_5y":       births_p,
         "birth_change_pct":     bchg,
-        "school_count":         n_school,           # ★ 실측
+        "school_count":         n_school,           # ★ 실측 (교육부 2023)
         "care_cap":             c_cap,              # 역산 추정
-        "care_enrolled":        c_enr,              # ★ 실측
+        "care_enrolled":        c_enr,              # ★ 실측 (교육부 2023)
         "care_waitlist":        wait,               # 시뮬레이션
         "care_util_rate":       util_rate,          # 실측 기반 산출
-        "afterschool_enrolled": afterschool_enr,    # NEIS 실측 또는 추정
-        "afterschool_source":  afterschool_source, # "NEIS실측" 또는 "추정"
+        "afterschool_enrolled": afterschool_enr,    # NEIS기반추정 또는 추정
+        "afterschool_source":   afterschool_source, # "NEIS기반추정" 또는 "추정"
         "afterschool_cap":      afterschool_cap,    # 추정
         "custom_edu_enrolled":  custom_enr,         # 추정 (지역아동센터 등)
         "demand_idx":           dem,
@@ -402,7 +433,10 @@ df = pd.DataFrame(rows)
 df.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
 
 print(f"\n생성 완료: {len(df)}개 / 유형 분포: {df['region_type'].value_counts().to_dict()}")
+neis_stu_cnt  = (df["students_source"] == "NEIS학급기반").sum()
+print(f"초등학생수 NEIS학급기반 반영: {neis_stu_cnt}/27개 지역 "
+      f"({'모두 실측' if neis_stu_cnt==27 else '일부 추정값 혼재'})")
 print(f"실측 이용인원 반영: {(df['care_enrolled'] > 0).sum()}개 지역")
 print()
-print(df[["name","region_type","care_enrolled","afterschool_enrolled","custom_edu_enrolled",
-          "supply_idx","imbal_idx","risk_score"]].to_string(index=False))
+print(df[["name","region_type","students","students_source","care_enrolled",
+          "afterschool_enrolled","supply_idx","imbal_idx","risk_score"]].to_string(index=False))

@@ -194,9 +194,9 @@ if _neis_meta["available"]:
         f"<span class='ds-agency est'>&#128295; NEIS 기반 추정</span>"
         f"<span class='badge-est'>추&nbsp;정</span>"
         f"</div>"
-        f"<div class='ds-items'>방과후학교 · 맞춤형교육 참여인원</div>"
-        f"<div class='ds-pub'>NEIS 실측 학교수 × 전국 참여율<br>"
-        f"유형별 도농 차등 (교육부 2024.04)</div>"
+        f"<div class='ds-items'>방과후학교 · 지역돌봄기관 참여인원</div>"
+        f"<div class='ds-pub'>방과후: NEIS 실측 학교수 × 전국 참여율<br>"
+        f"지역돌봄기관: 유형별 도농 차등 추정</div>"
         f"</div>"
     )
 else:
@@ -206,7 +206,7 @@ else:
         "<span class='ds-agency est'>&#128295; 통계 기반 추정</span>"
         "<span class='badge-est'>추&nbsp;정</span>"
         "</div>"
-        "<div class='ds-items'>방과후학교 · 맞춤형교육 참여인원</div>"
+        "<div class='ds-items'>방과후학교 · 지역돌봄기관 참여인원</div>"
         "<div class='ds-pub'>전국 방과후학교 참여율(52.9%) 기반<br>"
         "유형별 도농 차등 추정 (교육부 2024.04)<br>"
         "<span style='color:#1B4D6B;font-size:9px'>"
@@ -600,13 +600,14 @@ with tab2:
         m3.metric("합계출산율", f"{detail['birth_rate']}명",
                   help="통계청 2023년 기준 (전국 평균 0.72명)")
 
-        # ── 3줄: 방과후·맞춤형 공급 지표
-        st.markdown('<p class="section-header">방과후·맞춤형 돌봄 공급</p>',
+        # ── 방과후·지역돌봄 공급 지표
+        st.markdown('<p class="section-header">방과후·지역돌봄 공급</p>',
                     unsafe_allow_html=True)
         s1, s2, s3 = st.columns(3)
-        as_enr  = detail.get("afterschool_enrolled", 0)
-        as_src  = detail.get("afterschool_source", "추정")
-        ce_enr  = detail.get("custom_edu_enrolled", 0)
+        as_enr    = detail.get("afterschool_enrolled", 0)
+        as_src    = detail.get("afterschool_source", "추정")
+        ce_enr    = detail.get("custom_edu_enrolled", 0)
+        # 통합 실질 공급 = 돌봄교실(×1.0) + 방과후학교(×0.35) + 지역돌봄기관(×0.40)
         total_eff = int(detail["care_enrolled"] + as_enr * 0.35 + ce_enr * 0.40)
 
         # 방과후학교 참여 — 출처 배지 표시
@@ -628,25 +629,26 @@ with tab2:
             f"<div style='font-size:22px;font-weight:700'>{as_enr:,}명</div>",
             unsafe_allow_html=True,
         )
-        s2.metric("맞춤형교육 참여", f"{ce_enr:,}명",
-                  help="지역아동센터·아이돌봄서비스·드림스타트 등 추정")
+        s2.metric("지역돌봄기관 참여", f"{ce_enr:,}명",
+                  help="지역아동센터·아이돌봄서비스·드림스타트 등 지역사회 돌봄기관 참여 추정")
         s3.metric("통합 실질 공급", f"{total_eff:,}명",
-                  help="돌봄교실 + 방과후(×0.35) + 맞춤형(×0.40) 가중합산")
+                  help="돌봄교실(×1.0) + 방과후학교(×0.35) + 지역돌봄기관(×0.40) 가중합산")
 
         if as_src == "NEIS기반추정":
             st.caption(
-                "📡 방과후학교 참여인원은 **NEIS 실측 학교 수** 기반 결정론적 계산값입니다. "
-                "(NEIS schoolInfo API 실측 학교 수 × 전국 참여율, 교육부 2024.04) "
-                "공급지수 = 돌봄교실 + 방과후(×0.35) + 맞춤형(×0.40) 복합 기여도"
+                "📡 방과후학교는 **NEIS 실측 학교 수** 기반 계산 | "
+                "지역돌봄기관은 통계 기반 추정 | "
+                "**통합 실질 공급** = 돌봄교실 + 방과후학교(×0.35) + 지역돌봄기관(×0.40)"
             )
         elif as_src == "NEIS실측":
             st.caption(
-                "✅ 방과후학교 참여인원은 **NEIS Open API 직접 조회 실측값**입니다. "
-                "공급지수는 돌봄교실 + 방과후(×0.35) + 맞춤형(×0.40) 복합 기여도로 산출됩니다."
+                "✅ 방과후학교는 **NEIS 직접 조회 실측값** | "
+                "지역돌봄기관은 통계 기반 추정 | "
+                "**통합 실질 공급** = 돌봄교실 + 방과후학교(×0.35) + 지역돌봄기관(×0.40)"
             )
         else:
             st.caption(
-                "💡 방과후학교·맞춤형교육 수치는 전국 참여율 통계 기반 추정값입니다. "
+                "💡 방과후학교·지역돌봄기관 수치는 전국 참여율 통계 기반 추정값입니다. "
                 "NEIS API 키로 `data/fetch_neis_afterschool.py`를 실행하면 NEIS 기반 계산으로 전환됩니다."
             )
 
@@ -664,7 +666,7 @@ with tab2:
         st.caption(
             f"수요 지수 {detail['demand_idx']:.3f} ÷ 복합 공급 지수 {detail['supply_idx']:.3f}"
             f" = **{detail['imbal_idx']:.3f}** ({balance_label})\n\n"
-            f"공급 지수 = (돌봄교실 + 방과후학교×0.35 + 맞춤형교육×0.40) ÷ 초등학생 수"
+            f"공급 지수 = (돌봄교실×1.0 + 방과후학교×0.35 + 지역돌봄기관×0.40) ÷ 초등학생 수"
         )
 
     with col_r:

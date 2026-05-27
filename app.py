@@ -144,7 +144,7 @@ st.markdown("""
 # ── 데이터 로드 & 모델 초기화
 # cache_version: 컬럼 구조가 바뀔 때 올려서 Streamlit Cloud 캐시 강제 무효화
 @st.cache_data
-def load(cache_version: int = 5):
+def load(cache_version: int = 6):
     df = load_data()
     return df
 
@@ -153,7 +153,7 @@ def init_models(df):
     ensure_trained(df)
     return load_models()
 
-df = load(cache_version=5)
+df = load(cache_version=6)
 reg, clf, scaler = init_models(df)
 
 # ── 사이드바
@@ -505,10 +505,14 @@ with tab3:
         abs(r["imbal_after"] - 1.0) < abs(r["imbal_before"] - 1.0)
         for _, r in result.iterrows()
     ))
-    ac_budget = result[result["region_type"].isin(["A","C"])]["allocated_억"].sum()
-    best = (result
-            .assign(_d=result["imbal_before"] - result["imbal_after"])
-            .nlargest(1, "_d").iloc[0])
+    ac_budget        = result[result["region_type"].isin(["A","C"])]["allocated_억"].sum()
+    total_new_slots  = int(result["new_care_slots"].sum())
+    total_children   = int(result["children_added"].sum())
+    # 개선폭 = 균형(1.0)까지의 거리 감소량 — B형(공급과잉→균형)도 양수로 잡힘
+    result["개선폭"] = (
+        (result["imbal_before"] - 1.0).abs() - (result["imbal_after"] - 1.0).abs()
+    ).round(4)
+    best = result.nlargest(1, "개선폭").iloc[0]
 
     st.markdown('<p class="section-header">📊 배분 효과 요약</p>', unsafe_allow_html=True)
 
@@ -522,7 +526,7 @@ with tab3:
 </div>""", unsafe_allow_html=True)
         b1, b2 = st.columns(2)
         b1.metric("평균 불균형 지수", f"{avg_before:.3f}")
-        b2.metric("고위험 지역", f"{stats['A']+stats['C']}개",
+        b2.metric("공급부족 지역", f"{stats['A']+stats['C']}개",
                   help="A형(위기+공급부족) + C형(비위기+공급부족)")
 
     with col_arr:
@@ -546,13 +550,14 @@ with tab3:
     # 보조 KPI 4개
     st.markdown("---")
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric("A·C형 집중 투자",  f"{ac_budget:.1f}억원",
+    k1.metric("A·C형 집중 투자",   f"{ac_budget:.1f}억원",
               f"전체 예산의 {ac_budget/budget*100:.0f}%")
-    k2.metric("지역당 평균 배분", f"{budget/len(result):.1f}억원")
-    k3.metric("최대 수혜 지역",   best["name"],
+    k2.metric("신규 확보 정원",    f"{total_new_slots:,}명",
+              help="A·C·D형 예산으로 새로 확보되는 돌봄 정원 합계 (1억원 ≈ 80명)")
+    k3.metric("추가 수혜 아동",    f"{total_children:,}명",
+              help="신규 정원에 실질적으로 배치될 아동 수 추정 (B형 구조전환 제외)")
+    k4.metric("최대 수혜 지역",    best["name"],
               f"불균형 {best['imbal_before']:.2f} → {best['imbal_after']:.2f}")
-    k4.metric("평균 불균형 개선", f"{avg_before - avg_after:.4f}",
-              "균형 기준(1.0) 대비")
 
     st.divider()
 
@@ -597,13 +602,14 @@ with tab3:
 
     # ④ 지역별 배분 내역 테이블 ────────────────────────
     st.markdown('<p class="section-header">지역별 배분 내역</p>', unsafe_allow_html=True)
-    result["개선폭"] = (result["imbal_before"] - result["imbal_after"]).round(4)
     show_cols = ["name","region_type","type_label","risk_score","care_waitlist",
-                 "allocated_억","imbal_before","imbal_after","개선폭"]
+                 "allocated_억","imbal_before","imbal_after","개선폭",
+                 "new_care_slots","children_added","cost_per_child_만원"]
     disp = result[show_cols].copy()
     disp.columns = ["지역명","유형","유형설명","위험점수","대기아동",
-                    "배분(억)","배분전 불균형","배분후 불균형","개선폭"]
-    _impr_max = float(result["개선폭"].max()) or 1.0
+                    "배분(억)","배분전 불균형","배분후 불균형","균형접근도",
+                    "신규정원","수혜아동","아동당단가(만원)"]
+    _impr_max = float(result["개선폭"].clip(lower=0).max()) or 1.0
     st.dataframe(
         disp,
         use_container_width=True,
@@ -611,10 +617,15 @@ with tab3:
             "위험점수": st.column_config.ProgressColumn(
                 "위험점수", min_value=0, max_value=100, format="%d",
             ),
-            "개선폭": st.column_config.ProgressColumn(
-                "개선폭", min_value=0, max_value=_impr_max, format="%.4f",
+            "균형접근도": st.column_config.ProgressColumn(
+                "균형접근도", min_value=0, max_value=_impr_max, format="%.4f",
+                help="|배분전-1.0| - |배분후-1.0|: 클수록 균형에 많이 접근",
             ),
         },
+    )
+    st.caption(
+        "💡 **신규정원**: A·C형 예산으로 확보되는 신규 돌봄 정원 (1억원 ≈ 80명, A형×2.2배 효율, C형×1.8배 효율) &nbsp;|&nbsp; "
+        "**균형접근도**: 불균형지수가 균형(1.0)에 가까워진 정도 — B형(공급과잉)도 구조전환으로 균형 접근 시 양수"
     )
 
 # ─────────────────────────────

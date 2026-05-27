@@ -285,7 +285,18 @@ with tab3:
     show_cols = ["name","region_type","type_label","risk_score","care_waitlist","allocated_억","imbal_before","imbal_after"]
     disp = result[show_cols].copy()
     disp.columns = ["지역명","유형","유형설명","위험점수","대기아동","배분(억)","배분전 불균형","배분후 불균형"]
-    st.dataframe(disp.style.background_gradient(subset=["위험점수"], cmap="Reds"), use_container_width=True)
+    st.dataframe(
+        disp,
+        use_container_width=True,
+        column_config={
+            "위험점수": st.column_config.ProgressColumn(
+                "위험점수",
+                min_value=0,
+                max_value=100,
+                format="%d",
+            )
+        }
+    )
 
     # 효과 요약
     avg_before = result["imbal_before"].mean()

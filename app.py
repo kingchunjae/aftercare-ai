@@ -94,7 +94,13 @@ with st.sidebar:
     col2.metric("평균 이용률", f"{stats['avg_util_rate']}%")
 
     st.divider()
-    st.caption("데이터 기준: 시뮬레이션 (2023~2024)\n실제 운영 시 NEIS·학교알리미 API 연동")
+    st.caption(
+        "**데이터 출처**\n"
+        "- 지역·좌표: 실제 행정구역\n"
+        "- 인구감소지역: 행안부 고시 제2024-15호\n"
+        "- 통계 범위: 교육부 초등돌봄(2023), 통계청 맞벌이가구(2023)\n"
+        "- 개별 수치: 추정 시뮬레이션"
+    )
 
 # ── 메인 헤더
 st.title("🏫 방과후·초등돌봄 수요-공급 불균형 AI 진단")
@@ -178,6 +184,11 @@ with tab2:
     detail = get_region_detail(df, detail_row["region_id"])
     t = detail["type"]
     tinfo = TYPE_INFO[t]
+
+    # 지역 특성 설명
+    note = detail_row.get("region_note", "")
+    if note:
+        st.caption(f"📍 {note}")
 
     # 유형 배지 + 위험 점수
     col_badge, col_risk = st.columns([3, 1])

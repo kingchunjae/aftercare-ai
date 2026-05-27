@@ -50,6 +50,7 @@ def get_region_detail(df: pd.DataFrame, region_id: str) -> dict:
         "top3":         row["top3_list"],
         "decline":      bool(row["decline"]),
         "urban":        bool(row["urban"]),
+        "note":         str(row.get("region_note", "")),
     }
 
 def simulate_budget(df: pd.DataFrame, budget_m: int, threshold: float = 0.2) -> pd.DataFrame:

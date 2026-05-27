@@ -278,20 +278,155 @@ with st.sidebar:
 st.title("🏫 방과후·초등돌봄 수요-공급 불균형 AI 진단")
 st.caption("교육 공공데이터 기반 지역소멸 위기 연계 분석 | 광역 통합 행정 시뮬레이션 (27개 시군구)")
 
-# ── 히어로 지표
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    st.metric("A형 (최우선 개입)", f"{stats['A']}개",
-              help="소멸위기 + 공급부족 — 긴급 자원 투입 필요")
-with c2:
-    st.metric("C형 (긴급 확충)", f"{stats['C']}개",
-              help="비소멸 + 공급부족 — 도시 과밀 지역")
-with c3:
-    st.metric("B형 (구조 전환)", f"{stats['B']}개",
-              help="소멸위기 + 공급과잉 — 시설 복합 활용")
-with c4:
-    st.metric("D형 (모니터링)", f"{stats['D']}개",
-              help="현재 균형 상태")
+# ── 히어로 지표 → 4분면 카드
+st.markdown(f"""
+<div style='font-family:sans-serif;margin-bottom:4px'>
+
+  <!-- 섹션 타이틀 -->
+  <div style='font-size:12.5px;font-weight:700;color:#444;margin-bottom:8px;
+       display:flex;align-items:center;gap:8px'>
+    <span>지역 유형 4분면 분류 체계</span>
+    <span style='font-size:11px;font-weight:400;color:#aaa'>공급 상태 × 소멸위기 여부</span>
+  </div>
+
+  <!-- 3열 그리드: [Y축 라벨 | 왼쪽 카드 | 오른쪽 카드] -->
+  <div style='display:grid;grid-template-columns:46px 1fr 1fr;
+       grid-template-rows:22px auto auto;column-gap:6px;row-gap:6px'>
+
+    <!-- ── 행 0: X축 라벨 ── -->
+    <div></div>
+    <div style='text-align:center;font-size:10px;color:#aaa;font-weight:600;
+         border-bottom:2px dashed #ddd;padding-bottom:2px;letter-spacing:0.2px'>
+      ← 공급 부족 &nbsp;(불균형지수 ≥ 1.2)
+    </div>
+    <div style='text-align:center;font-size:10px;color:#aaa;font-weight:600;
+         border-bottom:2px dashed #ddd;padding-bottom:2px;letter-spacing:0.2px'>
+      공급 과잉·균형 &nbsp;(불균형지수 ≤ 1.0) →
+    </div>
+
+    <!-- ── 행 1: 위기지역 ── -->
+    <div style='display:flex;align-items:center;justify-content:center;
+         border-right:2px dashed #ddd;padding-right:4px'>
+      <span style='writing-mode:vertical-lr;transform:rotate(180deg);
+            font-size:10px;color:#aaa;font-weight:600;white-space:nowrap;
+            letter-spacing:0.3px'>▲ 위기지역 (소멸)</span>
+    </div>
+
+    <!-- A형: 위기 + 공급부족 -->
+    <div style='background:#fdecea;border:2px solid #C0392B;border-radius:10px;
+         padding:14px 16px'>
+      <div style='display:flex;align-items:flex-start;gap:10px;margin-bottom:8px'>
+        <div style='background:#C0392B;color:white;font-size:16px;font-weight:800;
+             min-width:34px;height:34px;border-radius:50%;display:flex;
+             align-items:center;justify-content:center;flex-shrink:0'>A</div>
+        <div style='flex:1'>
+          <div>
+            <span style='font-size:26px;font-weight:800;color:#C0392B;line-height:1'>{stats["A"]}</span>
+            <span style='font-size:13px;font-weight:600;color:#C0392B'>개 지역</span>
+          </div>
+          <div style='font-size:11.5px;font-weight:700;color:#C0392B;margin-top:1px'>
+            위기 + 공급부족
+          </div>
+        </div>
+        <span style='font-size:20px;opacity:0.45;flex-shrink:0'>🔴</span>
+      </div>
+      <div style='font-size:11.5px;color:#555;line-height:1.55;margin-bottom:9px'>
+        소멸위기 지역이면서 돌봄 수요가 공급을 크게 초과.
+        즉각적인 자원 투입이 필요한 <b style='color:#C0392B'>최우선 개입 대상</b>
+      </div>
+      <span style='background:#C0392B;color:white;font-size:10.5px;font-weight:700;
+            padding:3px 11px;border-radius:4px;display:inline-block'>🚨 긴급 개입</span>
+    </div>
+
+    <!-- B형: 위기 + 공급과잉 -->
+    <div style='background:#fef4e8;border:2px solid #E67E22;border-radius:10px;
+         padding:14px 16px'>
+      <div style='display:flex;align-items:flex-start;gap:10px;margin-bottom:8px'>
+        <div style='background:#E67E22;color:white;font-size:16px;font-weight:800;
+             min-width:34px;height:34px;border-radius:50%;display:flex;
+             align-items:center;justify-content:center;flex-shrink:0'>B</div>
+        <div style='flex:1'>
+          <div>
+            <span style='font-size:26px;font-weight:800;color:#E67E22;line-height:1'>{stats["B"]}</span>
+            <span style='font-size:13px;font-weight:600;color:#E67E22'>개 지역</span>
+          </div>
+          <div style='font-size:11.5px;font-weight:700;color:#E67E22;margin-top:1px'>
+            위기 + 공급과잉
+          </div>
+        </div>
+        <span style='font-size:20px;opacity:0.45;flex-shrink:0'>🟠</span>
+      </div>
+      <div style='font-size:11.5px;color:#555;line-height:1.55;margin-bottom:9px'>
+        인구감소로 수요는 줄었지만 시설은 남아있는 지역.
+        기존 인프라의 <b style='color:#E67E22'>복합 활용 전환</b>이 필요한 구조 개편 대상
+      </div>
+      <span style='background:#E67E22;color:white;font-size:10.5px;font-weight:700;
+            padding:3px 11px;border-radius:4px;display:inline-block'>🔄 구조 전환</span>
+    </div>
+
+    <!-- ── 행 2: 비위기지역 ── -->
+    <div style='display:flex;align-items:center;justify-content:center;
+         border-right:2px dashed #ddd;padding-right:4px'>
+      <span style='writing-mode:vertical-lr;transform:rotate(180deg);
+            font-size:10px;color:#aaa;font-weight:600;white-space:nowrap;
+            letter-spacing:0.3px'>비위기지역 ▼</span>
+    </div>
+
+    <!-- C형: 비위기 + 공급부족 -->
+    <div style='background:#eaf0f7;border:2px solid #1B4D6B;border-radius:10px;
+         padding:14px 16px'>
+      <div style='display:flex;align-items:flex-start;gap:10px;margin-bottom:8px'>
+        <div style='background:#1B4D6B;color:white;font-size:16px;font-weight:800;
+             min-width:34px;height:34px;border-radius:50%;display:flex;
+             align-items:center;justify-content:center;flex-shrink:0'>C</div>
+        <div style='flex:1'>
+          <div>
+            <span style='font-size:26px;font-weight:800;color:#1B4D6B;line-height:1'>{stats["C"]}</span>
+            <span style='font-size:13px;font-weight:600;color:#1B4D6B'>개 지역</span>
+          </div>
+          <div style='font-size:11.5px;font-weight:700;color:#1B4D6B;margin-top:1px'>
+            비위기 + 공급부족
+          </div>
+        </div>
+        <span style='font-size:20px;opacity:0.45;flex-shrink:0'>🔵</span>
+      </div>
+      <div style='font-size:11.5px;color:#555;line-height:1.55;margin-bottom:9px'>
+        도심 성장 지역으로 학생 수는 유지되나 돌봄 시설이 부족.
+        <b style='color:#1B4D6B'>신규 시설 확충</b>이 시급한 도시 과밀 지역
+      </div>
+      <span style='background:#1B4D6B;color:white;font-size:10.5px;font-weight:700;
+            padding:3px 11px;border-radius:4px;display:inline-block'>🏗️ 긴급 확충</span>
+    </div>
+
+    <!-- D형: 비위기 + 균형 -->
+    <div style='background:#eaf7ed;border:2px solid #27AE60;border-radius:10px;
+         padding:14px 16px'>
+      <div style='display:flex;align-items:flex-start;gap:10px;margin-bottom:8px'>
+        <div style='background:#27AE60;color:white;font-size:16px;font-weight:800;
+             min-width:34px;height:34px;border-radius:50%;display:flex;
+             align-items:center;justify-content:center;flex-shrink:0'>D</div>
+        <div style='flex:1'>
+          <div>
+            <span style='font-size:26px;font-weight:800;color:#27AE60;line-height:1'>{stats["D"]}</span>
+            <span style='font-size:13px;font-weight:600;color:#27AE60'>개 지역</span>
+          </div>
+          <div style='font-size:11.5px;font-weight:700;color:#27AE60;margin-top:1px'>
+            비위기 + 균형
+          </div>
+        </div>
+        <span style='font-size:20px;opacity:0.45;flex-shrink:0'>🟢</span>
+      </div>
+      <div style='font-size:11.5px;color:#555;line-height:1.55;margin-bottom:9px'>
+        수요와 공급이 균형을 이루고 있는 안정적 지역.
+        현 수준 유지 및 <b style='color:#27AE60'>변화 추이 모니터링</b>으로 관리
+      </div>
+      <span style='background:#27AE60;color:white;font-size:10.5px;font-weight:700;
+            padding:3px 11px;border-radius:4px;display:inline-block'>📋 모니터링</span>
+    </div>
+
+  </div><!-- /grid -->
+</div>
+""", unsafe_allow_html=True)
 
 st.divider()
 

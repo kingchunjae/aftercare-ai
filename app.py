@@ -46,6 +46,37 @@ st.markdown("""
   div[data-testid="stTabs"] button {
     font-size: 14px; font-weight: 500;
   }
+
+  /* 유형 필터 체크박스 행 */
+  .type-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .type-filter-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .type-filter-label {
+    font-size: 12px;
+    color: #333;
+    line-height: 1.4;
+    word-break: keep-all;
+  }
+  /* 체크박스-뱃지 사이 세로 정렬 */
+  div[data-testid="stSidebar"] div[data-testid="stCheckbox"] {
+    margin-bottom: 0 !important;
+  }
+  div[data-testid="stSidebar"] div[data-testid="stCheckbox"] label {
+    min-height: 0 !important;
+  }
 </style>
 """, unsafe_allow_html=True)
 
@@ -71,11 +102,27 @@ with st.sidebar:
     st.divider()
 
     st.subheader("필터")
-    type_filter = st.multiselect(
-        "유형 선택", ["A","B","C","D"],
-        default=["A","B","C","D"],
-        format_func=lambda t: f"{t}형 — {TYPE_INFO[t]['label']}"
-    )
+    st.caption("유형 선택")
+    type_filter = []
+    for _t, _info in TYPE_INFO.items():
+        _col_cb, _col_label = st.columns([0.13, 0.87])
+        with _col_cb:
+            _checked = st.checkbox(
+                label=_t, value=True,
+                key=f"filter_type_{_t}",
+                label_visibility="collapsed",
+            )
+        with _col_label:
+            st.markdown(
+                f"<div class='type-filter-row'>"
+                f"<span class='type-filter-badge' style='background:{_info['color']}'>"
+                f"{_t}형</span>"
+                f"<span class='type-filter-label'>{_info['label']}</span>"
+                f"</div>",
+                unsafe_allow_html=True,
+            )
+        if _checked:
+            type_filter.append(_t)
     risk_min = st.slider("최소 위험 점수", 0, 100, 0)
     decline_only = st.checkbox("인구감소지역만")
 

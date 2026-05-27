@@ -13,17 +13,37 @@ data/generate_data.py — 광주광역시 + 전라남도 27개 시군구
   돌봄 정원     : 교육부 공표 유형별 이용률 범위 역산 추정
                   (공공데이터 미공개)
   돌봄 대기자   : 시뮬레이션 (정부 시군구 단위 미공개)
-  방과후 정원   : 시뮬레이션 (공공데이터 미공개)
+  방과후 참여인원: NEIS Open API 실측 (fetch_neis_afterschool.py 실행 시)
+                  미수집 시 전국 참여율 52.9% 기반 유형별 추정
 """
 
 import os
+import json
 import numpy as np
 import pandas as pd
 
 # ── 경로
-DATA_DIR   = os.path.dirname(__file__)
-CARE_FILE  = os.path.join(DATA_DIR, "2023년+초등돌봄교실+현황('23.4월+기준)_최종.xlsx")
-OUTPUT_CSV = os.path.join(DATA_DIR, "regions.csv")
+DATA_DIR        = os.path.dirname(__file__)
+CARE_FILE       = os.path.join(DATA_DIR, "2023년+초등돌봄교실+현황('23.4월+기준)_최종.xlsx")
+OUTPUT_CSV      = os.path.join(DATA_DIR, "regions.csv")
+NEIS_CACHE_FILE = os.path.join(DATA_DIR, "neis_afterschool_cache.json")
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Step 0. NEIS 방과후학교 캐시 로드 (선택적)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NEIS_AFTERSCHOOL = {}   # {region_id: {"enrolled": int, "source": str, "year": str}}
+if os.path.exists(NEIS_CACHE_FILE):
+    try:
+        with open(NEIS_CACHE_FILE, "r", encoding="utf-8") as _f:
+            _cache = json.load(_f)
+        NEIS_AFTERSCHOOL = _cache.get("regions", {})
+        _covered = len(NEIS_AFTERSCHOOL)
+        _year    = _cache.get("year", "")
+        print(f"NEIS 캐시 로드: {_covered}개 지역 실측 데이터 반영 ({_year}년도)")
+    except Exception as _e:
+        print(f"[WARN] NEIS 캐시 로드 실패: {_e} → 추정값 사용")
+else:
+    print("NEIS 캐시 없음 → 방과후학교 참여인원 추정값 사용")
 
 # ── 유형 메타
 TYPE_COLORS = {"A": "#C0392B", "B": "#E67E22", "C": "#1B4D6B", "D": "#27AE60"}
@@ -283,9 +303,15 @@ for r in REGIONS:
     # ── 실제 이용률
     util_rate = round(c_enr / c_cap * 100, 1) if c_cap > 0 else 0.0
 
-    # ── 방과후학교 참여인원 추정 (전국 참여율 52.9% 기준, 지역 특성 차등)
-    as_rate        = g.uniform(*AFTERSCHOOL_RATE[r["t"]])
-    afterschool_enr = int(stu * as_rate)
+    # ── 방과후학교 참여인원: NEIS 실측 우선, 없으면 추정
+    neis_data = NEIS_AFTERSCHOOL.get(rid)
+    if neis_data and neis_data.get("enrolled", 0) > 0:
+        afterschool_enr    = int(neis_data["enrolled"])
+        afterschool_source = "NEIS실측"
+    else:
+        as_rate            = g.uniform(*AFTERSCHOOL_RATE[r["t"]])
+        afterschool_enr    = int(stu * as_rate)
+        afterschool_source = "추정"
     # 방과후학교 정원 추정: 참여인원 ÷ 이용률(80-92%)
     afterschool_cap = max(int(afterschool_enr / g.uniform(0.80, 0.92)), afterschool_enr + 1)
 
@@ -342,7 +368,8 @@ for r in REGIONS:
         "care_enrolled":        c_enr,              # ★ 실측
         "care_waitlist":        wait,               # 시뮬레이션
         "care_util_rate":       util_rate,          # 실측 기반 산출
-        "afterschool_enrolled": afterschool_enr,    # 추정 (전국 참여율 기반)
+        "afterschool_enrolled": afterschool_enr,    # NEIS 실측 또는 추정
+        "afterschool_source":  afterschool_source, # "NEIS실측" 또는 "추정"
         "afterschool_cap":      afterschool_cap,    # 추정
         "custom_edu_enrolled":  custom_enr,         # 추정 (지역아동센터 등)
         "demand_idx":           dem,

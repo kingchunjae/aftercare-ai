@@ -53,6 +53,7 @@ def get_region_detail(df: pd.DataFrame, region_id: str) -> dict:
         "school_count":         int(row["school_count"])         if "school_count"         in row.index else 0,
         "care_enrolled":        int(row["care_enrolled"])        if "care_enrolled"        in row.index else 0,
         "afterschool_enrolled": int(row["afterschool_enrolled"]) if "afterschool_enrolled" in row.index else 0,
+        "afterschool_source":   str(row["afterschool_source"])   if "afterschool_source"   in row.index else "추정",
         "custom_edu_enrolled":  int(row["custom_edu_enrolled"])  if "custom_edu_enrolled"  in row.index else 0,
         "note":                 str(row["region_note"]) if "region_note" in row.index else "",
         "data_note":            str(row["data_note"])   if "data_note"   in row.index else "",

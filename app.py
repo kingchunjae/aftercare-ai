@@ -141,10 +141,30 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ── NEIS 캐시 상태 확인 (사이드바 표시용)
+import json as _json
+_NEIS_CACHE_PATH = os.path.join(os.path.dirname(__file__), "data", "neis_afterschool_cache.json")
+def _load_neis_meta() -> dict:
+    if os.path.exists(_NEIS_CACHE_PATH):
+        try:
+            with open(_NEIS_CACHE_PATH, "r", encoding="utf-8") as _f:
+                _c = _json.load(_f)
+            return {
+                "available": True,
+                "coverage":  len(_c.get("regions", {})),
+                "year":      _c.get("year", ""),
+                "fetched_at": _c.get("fetched_at", ""),
+            }
+        except Exception:
+            pass
+    return {"available": False}
+
+_neis_meta = _load_neis_meta()
+
 # ── 데이터 로드 & 모델 초기화
 # cache_version: 컬럼 구조가 바뀔 때 올려서 Streamlit Cloud 캐시 강제 무효화
 @st.cache_data
-def load(cache_version: int = 6):
+def load(cache_version: int = 7):
     df = load_data()
     return df
 
@@ -153,8 +173,45 @@ def init_models(df):
     ensure_trained(df)
     return load_models()
 
-df = load(cache_version=6)
+df = load(cache_version=7)
 reg, clf, scaler = init_models(df)
+
+# ── NEIS 상태에 따른 사이드바 카드 HTML 결정
+if _neis_meta["available"]:
+    _neis_sidebar_card = (
+        f"<div class='ds-card'>"
+        f"<div class='ds-card-top'>"
+        f"<span class='ds-agency'>&#128203; NEIS Open API</span>"
+        f"<span class='badge-real'>실&nbsp;측</span>"
+        f"</div>"
+        f"<div class='ds-items'>방과후학교 참여인원</div>"
+        f"<div class='ds-pub'>"
+        f"AftShoSeatInfo ({_neis_meta['year']}년도)<br>"
+        f"{_neis_meta['coverage']}개 지역 실측 반영 · {_neis_meta['fetched_at'][:10]}"
+        f"</div></div>"
+        f"<div class='ds-card est'>"
+        f"<div class='ds-card-top'>"
+        f"<span class='ds-agency est'>&#128295; 통계 기반 추정</span>"
+        f"<span class='badge-est'>추&nbsp;정</span>"
+        f"</div>"
+        f"<div class='ds-items'>맞춤형교육 참여인원</div>"
+        f"<div class='ds-pub'>지역아동센터·드림스타트 등<br>유형별 도농 차등 추정</div>"
+        f"</div>"
+    )
+else:
+    _neis_sidebar_card = (
+        "<div class='ds-card est'>"
+        "<div class='ds-card-top'>"
+        "<span class='ds-agency est'>&#128295; 통계 기반 추정</span>"
+        "<span class='badge-est'>추&nbsp;정</span>"
+        "</div>"
+        "<div class='ds-items'>방과후학교 · 맞춤형교육 참여인원</div>"
+        "<div class='ds-pub'>전국 방과후학교 참여율(52.9%) 기반<br>"
+        "유형별 도농 차등 추정 (교육부 2024.04)<br>"
+        "<span style='color:#1B4D6B;font-size:9px'>"
+        "&#9432; NEIS API 연동 시 실측값으로 자동 대체</span></div>"
+        "</div>"
+    )
 
 # ── 사이드바
 with st.sidebar:
@@ -234,9 +291,9 @@ with st.sidebar:
     col2.metric("평균 이용률", f"{stats['avg_util_rate']}%")
 
     st.divider()
-    st.markdown("""
-<div class="ds-wrap">
-  <div class="ds-title">📊 데이터 출처</div>
+    st.markdown(
+        f"""<div class="ds-wrap">
+  <div class="ds-title">&#128202; 데이터 출처</div>
 
   <div class="ds-legend">
     <span><span class="badge-real">실&nbsp;측</span> 공공데이터 원본</span>
@@ -245,7 +302,7 @@ with st.sidebar:
 
   <div class="ds-card">
     <div class="ds-card-top">
-      <span class="ds-agency">🏛 교육부</span>
+      <span class="ds-agency">&#127963; 교육부</span>
       <span class="badge-real">실&nbsp;측</span>
     </div>
     <div class="ds-items">이용인원 · 돌봄 학교 수</div>
@@ -254,7 +311,7 @@ with st.sidebar:
 
   <div class="ds-card">
     <div class="ds-card-top">
-      <span class="ds-agency">📈 통계청</span>
+      <span class="ds-agency">&#128200; 통계청</span>
       <span class="badge-real">실&nbsp;측</span>
     </div>
     <div class="ds-items">맞벌이 가구 비율 · 합계출산율</div>
@@ -263,7 +320,7 @@ with st.sidebar:
 
   <div class="ds-card">
     <div class="ds-card-top">
-      <span class="ds-agency">🏢 행정안전부</span>
+      <span class="ds-agency">&#127970; 행정안전부</span>
       <span class="badge-real">실&nbsp;측</span>
     </div>
     <div class="ds-items">인구감소지역 지정 현황</div>
@@ -272,25 +329,18 @@ with st.sidebar:
 
   <div class="ds-card">
     <div class="ds-card-top">
-      <span class="ds-agency">📰 교육통계·언론</span>
+      <span class="ds-agency">&#128240; 교육통계·언론</span>
       <span class="badge-real">실&nbsp;측</span>
     </div>
     <div class="ds-items">초등학생 수 (시군구별)</div>
     <div class="ds-pub">경향신문 2024.02<br>시사저널 2025</div>
   </div>
 
-  <div class="ds-card est">
-    <div class="ds-card-top">
-      <span class="ds-agency est">🔧 통계 기반 추정</span>
-      <span class="badge-est">추&nbsp;정</span>
-    </div>
-    <div class="ds-items">방과후학교 · 맞춤형교육 참여인원</div>
-    <div class="ds-pub">전국 방과후학교 참여율(52.9%) 기반<br>유형별 도농 차등 추정 (교육부 2024.04)</div>
-  </div>
+  {_neis_sidebar_card}
 
   <div class="ds-card est">
     <div class="ds-card-top">
-      <span class="ds-agency est">🔧 역산 추정</span>
+      <span class="ds-agency est">&#128295; 역산 추정</span>
       <span class="badge-est">추&nbsp;정</span>
     </div>
     <div class="ds-items">돌봄 정원 · 대기아동 수</div>
@@ -302,8 +352,9 @@ with st.sidebar:
     출처: <a href="https://data.go.kr" target="_blank" style="color:#1B4D6B">공공데이터포털</a> ·
     <a href="https://kosis.kr" target="_blank" style="color:#1B4D6B">국가통계포털(KOSIS)</a>
   </div>
-</div>
-""", unsafe_allow_html=True)
+</div>""",
+        unsafe_allow_html=True,
+    )
 
 # ── 메인 헤더
 st.title("🏫 방과후·초등돌봄 수요-공급 불균형 AI 진단")
@@ -552,19 +603,43 @@ with tab2:
         st.markdown('<p class="section-header">방과후·맞춤형 돌봄 공급</p>',
                     unsafe_allow_html=True)
         s1, s2, s3 = st.columns(3)
-        as_enr = detail.get("afterschool_enrolled", 0)
-        ce_enr = detail.get("custom_edu_enrolled", 0)
+        as_enr  = detail.get("afterschool_enrolled", 0)
+        as_src  = detail.get("afterschool_source", "추정")
+        ce_enr  = detail.get("custom_edu_enrolled", 0)
         total_eff = int(detail["care_enrolled"] + as_enr * 0.35 + ce_enr * 0.40)
-        s1.metric("방과후학교 참여", f"{as_enr:,}명",
-                  help="전국 방과후학교 참여율(52.9%, 교육부 2024.04) 기반 지역 특성 추정")
+
+        # 방과후학교 참여 — 출처 배지 표시
+        if as_src == "NEIS실측":
+            _as_badge = "<span style='background:#e3f0e8;color:#256336;border:1px solid #b2d9bc;" \
+                        "font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;" \
+                        "margin-left:4px'>NEIS 실측</span>"
+            _as_help  = "NEIS Open API (AftShoSeatInfo) 실측값 — 방과후학교 수강 정원 합산"
+        else:
+            _as_badge = "<span style='background:#fff4e5;color:#a04e00;border:1px solid #f5c97a;" \
+                        "font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;" \
+                        "margin-left:4px'>추정</span>"
+            _as_help  = "전국 방과후학교 참여율(52.9%, 교육부 2024.04) 기반 지역 특성 추정"
+
+        s1.markdown(
+            f"<div style='font-size:11px;color:#888;margin-bottom:2px'>방과후학교 참여{_as_badge}</div>"
+            f"<div style='font-size:22px;font-weight:700'>{as_enr:,}명</div>",
+            unsafe_allow_html=True,
+        )
         s2.metric("맞춤형교육 참여", f"{ce_enr:,}명",
                   help="지역아동센터·아이돌봄서비스·드림스타트 등 추정")
         s3.metric("통합 실질 공급", f"{total_eff:,}명",
                   help="돌봄교실 + 방과후(×0.35) + 맞춤형(×0.40) 가중합산")
-        st.caption(
-            "💡 방과후학교·맞춤형교육 수치는 전국 참여율 통계 기반 추정값입니다. "
-            "공급지수는 이 세 가지 프로그램의 복합 기여도로 산출됩니다."
-        )
+
+        if as_src == "NEIS실측":
+            st.caption(
+                "✅ 방과후학교 참여인원은 **NEIS Open API 실측값**입니다. "
+                "공급지수는 돌봄교실 + 방과후(×0.35) + 맞춤형(×0.40) 복합 기여도로 산출됩니다."
+            )
+        else:
+            st.caption(
+                "💡 방과후학교·맞춤형교육 수치는 전국 참여율 통계 기반 추정값입니다. "
+                "NEIS API 키로 `data/fetch_neis_afterschool.py`를 실행하면 실측값으로 대체됩니다."
+            )
 
         # 데이터 출처 표기
         if detail.get("data_note"):

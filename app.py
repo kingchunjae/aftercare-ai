@@ -586,16 +586,25 @@ with tab2:
         st.markdown('<p class="section-header">핵심 지표</p>', unsafe_allow_html=True)
         m1, m2, m3 = st.columns(3)
         _stu_src = detail.get("students_source", "추정")
-        _stu_badge = (
-            "<span style='background:#e8f4fd;color:#1565c0;font-size:10px;"
-            "padding:1px 5px;border-radius:8px;font-weight:600;'>NEIS 학급기반</span>"
-            if _stu_src == "NEIS학급기반" else
-            "<span style='background:#fff3e0;color:#e65100;font-size:10px;"
-            "padding:1px 5px;border-radius:8px;font-weight:600;'>추정</span>"
-        )
-        m1.metric("초등학생", f"{detail['students']:,}명",
-                  help=f"출처: {_stu_src} — NEIS classInfo(2025학년도) 실측 학급수 × KEDI 학급당 학생수(2024)"
-                       if _stu_src == "NEIS학급기반" else "출처: 언론 추정 (경향신문 2024, 시사저널 2025)")
+        if _stu_src == "NEIS학급기반":
+            _stu_help  = (
+                "📂 공공데이터 원본 — NEIS Open API (open.neis.go.kr)\n\n"
+                "NEIS classInfo(2025학년도) 실측 학급수 "
+                "× KEDI 교육통계 2024 시군구별 학급당 학생수"
+            )
+            _stu_badge = (
+                "<span style='background:#e8f4fd;color:#1565c0;font-size:10px;"
+                "padding:2px 7px;border-radius:8px;font-weight:700;letter-spacing:0.2px;'>"
+                "&#128209; NEIS Open API</span>"
+                "<span style='font-size:10px;color:#666;margin-left:5px;'>공공데이터 원본</span>"
+            )
+        else:
+            _stu_help  = "출처: 언론 추정 (경향신문 2024, 시사저널 2025)"
+            _stu_badge = (
+                "<span style='background:#fff3e0;color:#e65100;font-size:10px;"
+                "padding:2px 7px;border-radius:8px;font-weight:600;'>추정</span>"
+            )
+        m1.metric("초등학생", f"{detail['students']:,}명", help=_stu_help)
         m1.markdown(_stu_badge, unsafe_allow_html=True)
         m2.metric("맞벌이 가구", f"{detail['dual_pct']}%")
         m3.metric("한부모 가구", f"{detail['single_pct']}%")

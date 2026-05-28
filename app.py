@@ -375,6 +375,55 @@ with st.sidebar:
 st.title("🏫 방과후·초등돌봄 수요-공급 불균형 AI 진단")
 st.caption("교육 공공데이터 기반 지역소멸 위기 연계 분석 | 광역 통합 행정 시뮬레이션 (27개 시군구)")
 
+# ── 프로젝트 소개 expander
+with st.expander("📋 프로젝트 소개 — 대회 출품 배경 및 문제 정의", expanded=False):
+    st.markdown(
+        '<div style="background:linear-gradient(135deg,#f0f6ff 0%,#f5f0ff 50%,#fff9f0 100%);border-radius:16px;padding:24px 28px 20px 28px;border:1px solid #dde8f4">'
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:20px">'
+        '<div><div style="font-size:10px;font-weight:700;letter-spacing:2px;color:#94a3b8;text-transform:uppercase;margin-bottom:5px">PROBLEM STATEMENT</div>'
+        '<div style="font-size:20px;font-weight:800;color:#1e293b;letter-spacing:-0.4px;line-height:1.25">왜 이 문제를 AI로 분석하는가?</div>'
+        '<div style="font-size:13px;color:#64748b;margin-top:6px;line-height:1.6">광주·전남 27개 시군구의 초등 돌봄 공백과 지역소멸 이중위기 — 직관이 아닌 <strong>공공데이터와 AI</strong>로 정밀 진단합니다.</div></div>'
+        '<div style="background:linear-gradient(135deg,#1B4D6B 0%,#2980B9 100%);color:white;border-radius:12px;padding:12px 18px;text-align:center;flex-shrink:0;box-shadow:0 4px 14px rgba(27,77,107,0.28)">'
+        '<div style="font-size:9px;font-weight:600;opacity:0.75;letter-spacing:1.2px;margin-bottom:5px">🏆 대 회 출 품 작</div>'
+        '<div style="font-size:12px;font-weight:800;line-height:1.55">제8회 교육<br>공공데이터<br>AI 활용대회</div></div></div>'
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:18px">'
+        '<div style="background:white;border-radius:12px;padding:15px;border:1px solid #fee2e2;border-left:4px solid #ef4444">'
+        '<div style="font-size:22px;margin-bottom:8px">📈</div>'
+        '<div style="font-size:13px;font-weight:700;color:#dc2626;margin-bottom:6px">돌봄 수요 폭발</div>'
+        '<div style="font-size:11.5px;color:#475569;line-height:1.65">맞벌이 가구 증가·저출생으로 1인당 돌봄 수요 밀도 상승. 일부 지역 대기 아동 수백 명 발생.</div></div>'
+        '<div style="background:white;border-radius:12px;padding:15px;border:1px solid #fde8c8;border-left:4px solid #f97316">'
+        '<div style="font-size:22px;margin-bottom:8px">⚖️</div>'
+        '<div style="font-size:13px;font-weight:700;color:#ea580c;margin-bottom:6px">도농 공급 격차</div>'
+        '<div style="font-size:11.5px;color:#475569;line-height:1.65">광주 도심은 시설 과잉·저이용, 전남 농촌은 만성 공급 부족. 동일 예산이 지역마다 다른 문제를 악화.</div></div>'
+        '<div style="background:white;border-radius:12px;padding:15px;border:1px solid #dbeafe;border-left:4px solid #3b82f6">'
+        '<div style="font-size:22px;margin-bottom:8px">🌀</div>'
+        '<div style="font-size:13px;font-weight:700;color:#2563eb;margin-bottom:6px">지역소멸 악순환</div>'
+        '<div style="font-size:11.5px;color:#475569;line-height:1.65">돌봄 공백 → 아동 이탈 → 학생 수 감소 → 폐교 → 인프라 붕괴. 전남 16개 군이 이미 소멸위기 지역.</div></div>'
+        '<div style="background:white;border-radius:12px;padding:15px;border:1px solid #dcfce7;border-left:4px solid #22c55e">'
+        '<div style="font-size:22px;margin-bottom:8px">🤖</div>'
+        '<div style="font-size:13px;font-weight:700;color:#16a34a;margin-bottom:6px">데이터 기반 해법</div>'
+        '<div style="font-size:11.5px;color:#475569;line-height:1.65">AI 4유형 분류·위험 점수화로 지역별 최적 개입 전략 도출. 예산 시뮬레이션으로 정책 효과 사전 예측.</div></div></div>'
+        '<div style="background:white;border-radius:12px;padding:16px 20px;border:1px solid #e2e8f0;display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap">'
+        '<div style="flex:1;min-width:200px">'
+        '<div style="font-size:10.5px;font-weight:700;color:#1B4D6B;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:12px">📊 분석 시스템 4단계 흐름</div>'
+        '<div style="display:flex;flex-direction:column;gap:8px">'
+        '<div style="display:flex;align-items:center;gap:10px"><span style="background:#1B4D6B;color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap;flex-shrink:0">Step 1</span><span style="font-size:12px;color:#334155">공공데이터 5종 수집·전처리 (교육부, 통계청, NEIS, 행안부)</span></div>'
+        '<div style="display:flex;align-items:center;gap:10px"><span style="background:#7c3aed;color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap;flex-shrink:0">Step 2</span><span style="font-size:12px;color:#334155">Random Forest AI — 27개 시군구 4유형 분류 + 위험 점수화</span></div>'
+        '<div style="display:flex;align-items:center;gap:10px"><span style="background:#0891b2;color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap;flex-shrink:0">Step 3</span><span style="font-size:12px;color:#334155">수요·공급·불균형 지수 시각화 + 인터랙티브 지도 대시보드</span></div>'
+        '<div style="display:flex;align-items:center;gap:10px"><span style="background:#059669;color:white;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap;flex-shrink:0">Step 4</span><span style="font-size:12px;color:#334155">예산 배분 시뮬레이션 + Claude AI 자동 정책 보고서 생성</span></div>'
+        '</div></div>'
+        '<div style="display:flex;flex-direction:column;gap:8px;min-width:150px">'
+        '<div style="background:#f8fafc;border-radius:9px;padding:10px 14px;border:1px solid #e2e8f0;text-align:center">'
+        '<div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:4px">분석 대상</div>'
+        '<div style="font-size:22px;font-weight:800;color:#1B4D6B;line-height:1.1">27<span style="font-size:13px;font-weight:600"> 개 시군구</span></div>'
+        '<div style="font-size:10px;color:#64748b;margin-top:2px">광주광역시 + 전라남도</div></div>'
+        '<div style="background:#f8fafc;border-radius:9px;padding:10px 14px;border:1px solid #e2e8f0;text-align:center">'
+        '<div style="font-size:10px;color:#94a3b8;font-weight:600;margin-bottom:4px">AI 분류 유형</div>'
+        '<div style="font-size:22px;font-weight:800;color:#7c3aed;line-height:1.1">4<span style="font-size:13px;font-weight:600"> 개 유형</span></div>'
+        '<div style="font-size:10px;color:#64748b;margin-top:2px">A·B·C·D 최적 개입 전략</div></div></div></div></div>',
+        unsafe_allow_html=True
+    )
+
 # ── 히어로 지표 → 4분면 카드  (st.columns 기반 레이아웃)
 st.markdown(
     "<div style='font-size:12.5px;font-weight:700;color:#444;margin-bottom:6px'>"

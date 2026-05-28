@@ -978,226 +978,34 @@ export ANTHROPIC_API_KEY=sk-ant-...
 # ══════════════════════════════════════════════════════════════
 # 데이터 출처 & 라이선스 섹션
 # ══════════════════════════════════════════════════════════════
+_CARD_BASE = "background:white;border-radius:12px;padding:16px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.05);"
+_CC_BADGE  = ('<div style="background:linear-gradient(135deg,#1b6b1b 0%,#3aaa35 100%);border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:10px">'
+              '<div style="width:28px;height:28px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#1b6b1b;flex-shrink:0;letter-spacing:-0.5px">CC</div>'
+              '<div><div style="font-size:10.5px;font-weight:700;color:white;line-height:1.3">공공누리 제1유형</div>'
+              '<div style="font-size:9px;color:rgba(255,255,255,0.75);line-height:1.4">출처표시 · 자유이용</div></div></div>')
+_REAL_BADGE = '<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:0.5px">실 측</span>'
+_EST_BADGE  = '<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde047;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:0.5px">추 정</span>'
+
+def _lic_card(color, icon_label, badge, name, items, meta, bottom):
+    return (f'<div class="dc-card" style="border-top:4px solid {color};">'
+            f'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+            f'<div style="font-size:13.5px;font-weight:700;color:{color}">{icon_label}</div>{badge}</div>'
+            f'<div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:5px;line-height:1.35">{name}</div>'
+            f'<div style="font-size:11px;color:#64748b;margin-bottom:10px;line-height:1.6">{items}</div>'
+            f'<div style="font-size:10.5px;color:#94a3b8;margin-bottom:14px">{meta}</div>'
+            f'{bottom}</div>')
+
+_cards = (
+    _lic_card("#1565C0", "🏛 교육부",      _REAL_BADGE, "초등돌봄교실 현황",       "이용인원 · 돌봄 학교 수",      "📅 2023년 4월 · 공공데이터포털", _CC_BADGE) +
+    _lic_card("#7B1FA2", "📊 통계청",      _REAL_BADGE, "지역별고용조사 · 출생통계", "맞벌이 가구 비율 · 합계출산율", "📅 2023년 하반기 · KOSIS",       _CC_BADGE) +
+    _lic_card("#B71C1C", "🏠 행정안전부",   _REAL_BADGE, "인구감소지역 지정 현황",    "전남 16개 군 지정 고시",       "📅 고시 제2024-15호",             _CC_BADGE) +
+    _lic_card("#1B4D6B", "📡 NEIS Open API",_REAL_BADGE,"학교기본정보 · 학급정보",   "초등학생 수 (시군구별)",        "📅 2025학년도 · open.neis.go.kr",_CC_BADGE) +
+    _lic_card("#d97706", "🔬 분석 산출값",  _EST_BADGE,  "돌봄 정원 · 대기아동",     "수요·공급·불균형 지수 산출",   "🔩 공공데이터 기반 역산 적용",
+              '<div style="background:linear-gradient(135deg,#92400e 0%,#d97706 100%);border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:10px">'
+              '<div style="width:28px;height:28px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🔬</div>'
+              '<div><div style="font-size:10.5px;font-weight:700;color:white;line-height:1.3">자체 분석 산출값</div>'
+              '<div style="font-size:9px;color:rgba(255,255,255,0.75);line-height:1.4">공공데이터 기반 역산·추정</div></div></div>')
+)
+
 st.markdown("<div style='margin-top:48px'></div>", unsafe_allow_html=True)
-st.markdown("""
-<div style="
-  background: linear-gradient(135deg, #f8fafc 0%, #eef3fb 50%, #f0fdf4 100%);
-  border-radius: 20px;
-  padding: 32px 36px 28px 36px;
-  border: 1px solid #dde6f0;
-  box-shadow: 0 4px 24px rgba(27,77,107,0.07);
-">
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:6px">
-    <div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:2.5px;color:#94a3b8;text-transform:uppercase;margin-bottom:6px">
-        DATA TRANSPARENCY
-      </div>
-      <div style="font-size:21px;font-weight:800;letter-spacing:-0.5px;
-                  background:linear-gradient(135deg,#1B4D6B 0%,#2980B9 100%);
-                  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-                  background-clip:text;line-height:1.2">
-        활용 데이터 및 라이선스
-      </div>
-      <div style="font-size:12.5px;color:#64748b;margin-top:6px;font-weight:400">
-        본 서비스는 공공누리 제1유형 공공데이터를 활용합니다
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px">
-      <div style="background:#1B4D6B;color:white;font-size:11.5px;font-weight:700;
-                  padding:7px 16px;border-radius:20px;white-space:nowrap;
-                  box-shadow:0 2px 8px rgba(27,77,107,0.3)">
-        📦 5개 데이터셋
-      </div>
-      <div style="background:linear-gradient(135deg,#1b6b1b,#3aaa35);color:white;
-                  font-size:11.5px;font-weight:700;padding:7px 16px;border-radius:20px;
-                  white-space:nowrap;box-shadow:0 2px 8px rgba(58,170,53,0.3)">
-        🄍 공공누리 제1유형
-      </div>
-    </div>
-  </div>
-
-  <div style="height:1px;background:linear-gradient(to right,#cbd5e1,transparent);margin:20px 0 16px 0"></div>
-  <div style="display:flex;gap:20px;margin-bottom:22px;flex-wrap:wrap;align-items:center">
-    <div style="display:flex;align-items:center;gap:7px">
-      <div style="width:9px;height:9px;background:#3aaa35;border-radius:50%"></div>
-      <span style="font-size:12px;color:#475569;font-weight:500">공공데이터 원본 (실측)</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:7px">
-      <div style="width:9px;height:9px;background:#d97706;border-radius:50%"></div>
-      <span style="font-size:12px;color:#475569;font-weight:500">자체 분석 산출값 (추정)</span>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:14px;margin-bottom:22px">
-    <div class="dc-card" style="border-top:4px solid #1565C0">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:13.5px;font-weight:700;color:#1565C0">🏛 교육부</div>
-        <span style="background:#dcfce7;color:#166534;border:1px solid #86efac;
-                     font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;
-                     letter-spacing:0.5px">실 측</span>
-      </div>
-      <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:5px;line-height:1.35">
-        초등돌봄교실 현황
-      </div>
-      <div style="font-size:11px;color:#64748b;margin-bottom:10px;line-height:1.6">
-        이용인원 · 돌봄 학교 수
-      </div>
-      <div style="font-size:10.5px;color:#94a3b8;margin-bottom:14px;display:flex;align-items:center;gap:4px">
-        <span>📅</span><span>2023년 4월 · 공공데이터포털</span>
-      </div>
-      <div style="background:linear-gradient(135deg,#1b6b1b 0%,#3aaa35 100%);
-                  border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:10px">
-        <div style="width:28px;height:28px;background:white;border-radius:50%;
-                    display:flex;align-items:center;justify-content:center;
-                    font-size:10px;font-weight:900;color:#1b6b1b;flex-shrink:0;letter-spacing:-0.5px">CC</div>
-        <div>
-          <div style="font-size:10.5px;font-weight:700;color:white;line-height:1.3">공공누리 제1유형</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.75);line-height:1.4">출처표시 · 자유이용</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="dc-card" style="border-top:4px solid #7B1FA2">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:13.5px;font-weight:700;color:#7B1FA2">📊 통계청</div>
-        <span style="background:#dcfce7;color:#166534;border:1px solid #86efac;
-                     font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;
-                     letter-spacing:0.5px">실 측</span>
-      </div>
-      <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:5px;line-height:1.35">
-        지역별고용조사 · 출생통계
-      </div>
-      <div style="font-size:11px;color:#64748b;margin-bottom:10px;line-height:1.6">
-        맞벌이 가구 비율 · 합계출산율
-      </div>
-      <div style="font-size:10.5px;color:#94a3b8;margin-bottom:14px;display:flex;align-items:center;gap:4px">
-        <span>📅</span><span>2023년 하반기 · KOSIS</span>
-      </div>
-      <div style="background:linear-gradient(135deg,#1b6b1b 0%,#3aaa35 100%);
-                  border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:10px">
-        <div style="width:28px;height:28px;background:white;border-radius:50%;
-                    display:flex;align-items:center;justify-content:center;
-                    font-size:10px;font-weight:900;color:#1b6b1b;flex-shrink:0;letter-spacing:-0.5px">CC</div>
-        <div>
-          <div style="font-size:10.5px;font-weight:700;color:white;line-height:1.3">공공누리 제1유형</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.75);line-height:1.4">출처표시 · 자유이용</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="dc-card" style="border-top:4px solid #B71C1C">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:13.5px;font-weight:700;color:#B71C1C">🏠 행정안전부</div>
-        <span style="background:#dcfce7;color:#166534;border:1px solid #86efac;
-                     font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;
-                     letter-spacing:0.5px">실 측</span>
-      </div>
-      <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:5px;line-height:1.35">
-        인구감소지역 지정 현황
-      </div>
-      <div style="font-size:11px;color:#64748b;margin-bottom:10px;line-height:1.6">
-        전남 16개 군 지정 고시
-      </div>
-      <div style="font-size:10.5px;color:#94a3b8;margin-bottom:14px;display:flex;align-items:center;gap:4px">
-        <span>📅</span><span>고시 제2024-15호</span>
-      </div>
-      <div style="background:linear-gradient(135deg,#1b6b1b 0%,#3aaa35 100%);
-                  border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:10px">
-        <div style="width:28px;height:28px;background:white;border-radius:50%;
-                    display:flex;align-items:center;justify-content:center;
-                    font-size:10px;font-weight:900;color:#1b6b1b;flex-shrink:0;letter-spacing:-0.5px">CC</div>
-        <div>
-          <div style="font-size:10.5px;font-weight:700;color:white;line-height:1.3">공공누리 제1유형</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.75);line-height:1.4">출처표시 · 자유이용</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="dc-card" style="border-top:4px solid #1B4D6B">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:13.5px;font-weight:700;color:#1B4D6B">📡 NEIS Open API</div>
-        <span style="background:#dcfce7;color:#166534;border:1px solid #86efac;
-                     font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;
-                     letter-spacing:0.5px">실 측</span>
-      </div>
-      <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:5px;line-height:1.35">
-        학교기본정보 · 학급정보
-      </div>
-      <div style="font-size:11px;color:#64748b;margin-bottom:10px;line-height:1.6">
-        초등학생 수 (시군구별)
-      </div>
-      <div style="font-size:10.5px;color:#94a3b8;margin-bottom:14px;display:flex;align-items:center;gap:4px">
-        <span>📅</span><span>2025학년도 · open.neis.go.kr</span>
-      </div>
-      <div style="background:linear-gradient(135deg,#1b6b1b 0%,#3aaa35 100%);
-                  border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:10px">
-        <div style="width:28px;height:28px;background:white;border-radius:50%;
-                    display:flex;align-items:center;justify-content:center;
-                    font-size:10px;font-weight:900;color:#1b6b1b;flex-shrink:0;letter-spacing:-0.5px">CC</div>
-        <div>
-          <div style="font-size:10.5px;font-weight:700;color:white;line-height:1.3">공공누리 제1유형</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.75);line-height:1.4">출처표시 · 자유이용</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="dc-card" style="border-top:4px solid #d97706;
-                                 background:linear-gradient(160deg,#fffbf5 0%,#fff7ed 100%)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:13.5px;font-weight:700;color:#d97706">🔬 분석 산출값</div>
-        <span style="background:#fef9c3;color:#854d0e;border:1px solid #fde047;
-                     font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;
-                     letter-spacing:0.5px">추 정</span>
-      </div>
-      <div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:5px;line-height:1.35">
-        돌봄 정원 · 대기아동
-      </div>
-      <div style="font-size:11px;color:#64748b;margin-bottom:10px;line-height:1.6">
-        수요·공급·불균형 지수 산출
-      </div>
-      <div style="font-size:10.5px;color:#94a3b8;margin-bottom:14px;display:flex;align-items:center;gap:4px">
-        <span>🔩</span><span>공공데이터 기반 역산 적용</span>
-      </div>
-      <div style="background:linear-gradient(135deg,#92400e 0%,#d97706 100%);
-                  border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:10px">
-        <div style="width:28px;height:28px;background:white;border-radius:50%;
-                    display:flex;align-items:center;justify-content:center;
-                    font-size:14px;flex-shrink:0">🔬</div>
-        <div>
-          <div style="font-size:10.5px;font-weight:700;color:white;line-height:1.3">자체 분석 산출값</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.75);line-height:1.4">공공데이터 기반 역산·추정</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <div style="background:white;border-radius:12px;padding:16px 20px;
-              border:1px solid #dde6f0;display:flex;align-items:flex-start;
-              gap:14px;box-shadow:0 1px 6px rgba(0,0,0,0.04)">
-    <div style="width:36px;height:36px;flex-shrink:0;
-                background:linear-gradient(135deg,#1b6b1b,#3aaa35);
-                border-radius:10px;display:flex;align-items:center;justify-content:center;
-                font-size:12px;font-weight:900;color:white;letter-spacing:-0.5px">CC</div>
-    <div style="font-size:12px;color:#475569;line-height:1.8">
-      <strong style="color:#1e293b">공공누리 제1유형</strong>이란, 출처만 표시하면 상업적 이용 및 변형이 자유로운
-      가장 개방적인 공공데이터 라이선스입니다. 라이선스 원문 기준: 공공저작물 자유이용허락 표준라이선스.<br>
-      <span style="font-size:11px;color:#94a3b8">
-        원본 데이터 제공처 &nbsp;·&nbsp;
-        <a href="https://data.go.kr" target="_blank"
-           style="color:#1B4D6B;font-weight:600;text-decoration:none">공공데이터포털(data.go.kr)</a>
-        &nbsp;·&nbsp;
-        <a href="https://open.neis.go.kr" target="_blank"
-           style="color:#1B4D6B;font-weight:600;text-decoration:none">NEIS Open API</a>
-        &nbsp;·&nbsp;
-        <a href="https://kosis.kr" target="_blank"
-           style="color:#1B4D6B;font-weight:600;text-decoration:none">국가통계포털(KOSIS)</a>
-        &nbsp;·&nbsp;
-        <a href="https://www.schoolinfo.go.kr" target="_blank"
-           style="color:#1B4D6B;font-weight:600;text-decoration:none">학교알리미</a>
-      </span>
-    </div>
-  </div>
-
-</div>
-""", unsafe_allow_html=True)
+st.markdown(f'<div style="background:linear-gradient(135deg,#f8fafc 0%,#eef3fb 50%,#f0fdf4 100%);border-radius:20px;padding:32px 36px 28px 36px;border:1px solid #dde6f0;box-shadow:0 4px 24px rgba(27,77,107,0.07)"><div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:6px"><div><div style="font-size:10px;font-weight:700;letter-spacing:2.5px;color:#94a3b8;text-transform:uppercase;margin-bottom:6px">DATA TRANSPARENCY</div><div style="font-size:21px;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(135deg,#1B4D6B 0%,#2980B9 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2">활용 데이터 및 라이선스</div><div style="font-size:12.5px;color:#64748b;margin-top:6px;font-weight:400">본 서비스는 공공누리 제1유형 공공데이터를 활용합니다</div></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px"><div style="background:#1B4D6B;color:white;font-size:11.5px;font-weight:700;padding:7px 16px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 8px rgba(27,77,107,0.3)">📦 5개 데이터셋</div><div style="background:linear-gradient(135deg,#1b6b1b,#3aaa35);color:white;font-size:11.5px;font-weight:700;padding:7px 16px;border-radius:20px;white-space:nowrap;box-shadow:0 2px 8px rgba(58,170,53,0.3)">🄍 공공누리 제1유형</div></div></div><div style="height:1px;background:linear-gradient(to right,#cbd5e1,transparent);margin:20px 0 16px 0"></div><div style="display:flex;gap:20px;margin-bottom:22px;flex-wrap:wrap;align-items:center"><div style="display:flex;align-items:center;gap:7px"><div style="width:9px;height:9px;background:#3aaa35;border-radius:50%"></div><span style="font-size:12px;color:#475569;font-weight:500">공공데이터 원본 (실측)</span></div><div style="display:flex;align-items:center;gap:7px"><div style="width:9px;height:9px;background:#d97706;border-radius:50%"></div><span style="font-size:12px;color:#475569;font-weight:500">자체 분석 산출값 (추정)</span></div></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:14px;margin-bottom:22px">{_cards}</div><div style="background:white;border-radius:12px;padding:16px 20px;border:1px solid #dde6f0;display:flex;align-items:flex-start;gap:14px;box-shadow:0 1px 6px rgba(0,0,0,0.04)"><div style="width:36px;height:36px;flex-shrink:0;background:linear-gradient(135deg,#1b6b1b,#3aaa35);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:white;letter-spacing:-0.5px">CC</div><div style="font-size:12px;color:#475569;line-height:1.8"><strong style="color:#1e293b">공공누리 제1유형</strong>이란, 출처만 표시하면 상업적 이용 및 변형이 자유로운 가장 개방적인 공공데이터 라이선스입니다. 라이선스 원문 기준: 공공저작물 자유이용허락 표준라이선스.<br><span style="font-size:11px;color:#94a3b8">원본 데이터 제공처 &nbsp;·&nbsp; <a href="https://data.go.kr" target="_blank" style="color:#1B4D6B;font-weight:600;text-decoration:none">공공데이터포털(data.go.kr)</a> &nbsp;·&nbsp; <a href="https://open.neis.go.kr" target="_blank" style="color:#1B4D6B;font-weight:600;text-decoration:none">NEIS Open API</a> &nbsp;·&nbsp; <a href="https://kosis.kr" target="_blank" style="color:#1B4D6B;font-weight:600;text-decoration:none">국가통계포털(KOSIS)</a> &nbsp;·&nbsp; <a href="https://www.schoolinfo.go.kr" target="_blank" style="color:#1B4D6B;font-weight:600;text-decoration:none">학교알리미</a></span></div></div></div>', unsafe_allow_html=True)

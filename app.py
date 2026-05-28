@@ -1088,6 +1088,176 @@ with tab3:
 # TAB 4: AI 정책 보고서
 # ─────────────────────────────
 with tab4:
+
+    # ── 핵심 인사이트 자동 계산 (전체 df 기준, API 불필요)
+    _top_risk    = df.nlargest(1, "risk_score").iloc[0]
+    _ac_df       = df[df["region_type"].isin(["A", "C"])]
+    _ac_waitlist = int(_ac_df["care_waitlist"].sum())
+    _ac_count    = len(_ac_df)
+    _min_budget  = max(10, round(_ac_waitlist * 400 / 10000 / 10) * 10)
+    _a_only      = df[df["region_type"] == "A"]
+    _urgent_name = (
+        _a_only.nlargest(1, "risk_score").iloc[0]["name"]
+        if len(_a_only) > 0
+        else _ac_df.nlargest(1, "risk_score").iloc[0]["name"]
+    )
+    _df_chg_pct  = (df["demand_idx_5y"] - df["demand_idx"]) / df["demand_idx"].clip(lower=0.001) * 100
+    _rising      = int((_df_chg_pct > 0).sum())
+    _worst5y_loc = _df_chg_pct.idxmax()
+    _worst5y_nm  = df.loc[_worst5y_loc, "name"]
+    _worst5y_pct = float(_df_chg_pct[_worst5y_loc])
+    _tr_color    = TYPE_INFO[_top_risk["region_type"]]["color"]
+
+    # ── 시스템 소개 헤더 카드
+    st.markdown(
+        '<div style="background:linear-gradient(135deg,#0f2942 0%,#1B4D6B 55%,#2471a3 100%);'
+        'border-radius:16px;padding:28px 32px 24px 32px;margin-bottom:20px">'
+        '<div style="font-size:10px;font-weight:700;letter-spacing:3px;color:rgba(255,255,255,0.45);'
+        'text-transform:uppercase;margin-bottom:10px">POLICY SUPPORT SYSTEM · 광주·전남 교육청</div>'
+        '<div style="font-size:22px;font-weight:900;color:white;letter-spacing:-0.5px;line-height:1.3;margin-bottom:8px">'
+        '방과후·초등돌봄 불균형 AI 진단 및<br>정책 지원 시스템</div>'
+        '<div style="font-size:13px;color:rgba(255,255,255,0.65);margin-bottom:20px;line-height:1.7">'
+        '광주·전남 <strong style="color:white">27개 시군구</strong>의 돌봄 수요·공급 불균형을 '
+        '공공데이터 기반 AI로 진단하고, 예산 배분 최적화부터 정책 보고서 자동 생성까지 지원하는 '
+        '<strong style="color:white">교육청 정책 결정 지원 도구</strong>입니다.</div>'
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        '<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:11px;'
+        'font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.2)">'
+        '🗺 AI 4유형 분류</span>'
+        '<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:11px;'
+        'font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.2)">'
+        '🔍 지역 간 비교 분석</span>'
+        '<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:11px;'
+        'font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.2)">'
+        '💰 예산 배분 시뮬레이션</span>'
+        '<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:11px;'
+        'font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.2)">'
+        '📈 5년 수요 예측</span>'
+        '<span style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9);font-size:11px;'
+        'font-weight:600;padding:5px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.2)">'
+        '📄 AI 정책 보고서 생성</span>'
+        '</div></div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── 핵심 인사이트 3개 카드
+    st.markdown(
+        '<div style="font-size:10px;font-weight:700;letter-spacing:2px;color:#94a3b8;'
+        'text-transform:uppercase;margin-bottom:12px">📊 핵심 인사이트 — 데이터 자동 분석</div>',
+        unsafe_allow_html=True,
+    )
+    _ic1, _ic2, _ic3 = st.columns(3)
+
+    with _ic1:
+        st.markdown(
+            f'<div style="background:white;border-radius:14px;padding:20px;'
+            f'border:1px solid #fee2e2;border-top:4px solid #ef4444">'
+            f'<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#ef4444;'
+            f'text-transform:uppercase;margin-bottom:12px">🔴 최우선 개입 지역</div>'
+            f'<div style="font-size:24px;font-weight:900;color:#1e293b;letter-spacing:-0.5px;'
+            f'line-height:1;margin-bottom:6px">{_top_risk["name"]}</div>'
+            f'<div style="display:flex;gap:6px;align-items:center;margin-bottom:14px">'
+            f'<span style="background:{_tr_color};color:white;font-size:10px;font-weight:700;'
+            f'padding:2px 9px;border-radius:4px">{_top_risk["region_type"]}형</span>'
+            f'<span style="font-size:11px;color:#64748b">'
+            f'{TYPE_INFO[_top_risk["region_type"]]["label"]}</span></div>'
+            f'<div style="display:flex;justify-content:space-between;'
+            f'padding:8px 0;border-top:1px solid #f8fafc">'
+            f'<span style="font-size:11px;color:#94a3b8">위험 점수</span>'
+            f'<span style="font-size:16px;font-weight:800;color:#ef4444">'
+            f'{int(_top_risk["risk_score"])} <span style="font-size:11px">/ 100</span></span></div>'
+            f'<div style="display:flex;justify-content:space-between;'
+            f'padding:7px 0;border-top:1px solid #f8fafc">'
+            f'<span style="font-size:11px;color:#94a3b8">불균형 지수</span>'
+            f'<span style="font-size:14px;font-weight:700;color:#334155">'
+            f'{float(_top_risk["imbal_idx"]):.2f}</span></div>'
+            f'<div style="display:flex;justify-content:space-between;'
+            f'padding:7px 0;border-top:1px solid #f8fafc;margin-bottom:14px">'
+            f'<span style="font-size:11px;color:#94a3b8">대기 아동</span>'
+            f'<span style="font-size:14px;font-weight:700;color:#334155">'
+            f'{int(_top_risk["care_waitlist"])}명</span></div>'
+            f'<div style="background:#fef2f2;border-radius:8px;padding:9px 12px;'
+            f'font-size:11px;color:#991b1b;line-height:1.65">'
+            f'즉각적인 돌봄 시설 확충 및 긴급 예산 투입이 필요합니다.</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    with _ic2:
+        st.markdown(
+            f'<div style="background:white;border-radius:14px;padding:20px;'
+            f'border:1px solid #dbeafe;border-top:4px solid #1B4D6B">'
+            f'<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#1B4D6B;'
+            f'text-transform:uppercase;margin-bottom:12px">💰 즉시 예산 배분 필요</div>'
+            f'<div style="font-size:24px;font-weight:900;color:#1e293b;letter-spacing:-0.5px;'
+            f'line-height:1;margin-bottom:6px">{_ac_waitlist:,}명</div>'
+            f'<div style="font-size:12px;color:#64748b;margin-bottom:14px">'
+            f'A+C형 합산 돌봄 대기 아동 (긴급 개입 대상)</div>'
+            f'<div style="display:flex;justify-content:space-between;'
+            f'padding:8px 0;border-top:1px solid #f8fafc">'
+            f'<span style="font-size:11px;color:#94a3b8">해당 지역 수</span>'
+            f'<span style="font-size:14px;font-weight:700;color:#334155">'
+            f'{_ac_count}개 지역</span></div>'
+            f'<div style="display:flex;justify-content:space-between;'
+            f'padding:7px 0;border-top:1px solid #f8fafc">'
+            f'<span style="font-size:11px;color:#94a3b8">최우선 지역</span>'
+            f'<span style="font-size:14px;font-weight:700;color:#334155">'
+            f'{_urgent_name}</span></div>'
+            f'<div style="display:flex;justify-content:space-between;'
+            f'padding:7px 0;border-top:1px solid #f8fafc;margin-bottom:14px">'
+            f'<span style="font-size:11px;color:#94a3b8">권장 최소 예산</span>'
+            f'<span style="font-size:16px;font-weight:800;color:#1B4D6B">'
+            f'약 {_min_budget}억원</span></div>'
+            f'<div style="background:#eff6ff;border-radius:8px;padding:9px 12px;'
+            f'font-size:11px;color:#1e40af;line-height:1.65">'
+            f'A형 45% · C형 40% 우선 배분 원칙 적용 시 대기 해소 가능 규모입니다.'
+            f'(1인당 연 400만원 기준)</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    with _ic3:
+        st.markdown(
+            f'<div style="background:white;border-radius:14px;padding:20px;'
+            f'border:1px solid #ede9fe;border-top:4px solid #7c3aed">'
+            f'<div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#7c3aed;'
+            f'text-transform:uppercase;margin-bottom:12px">📈 5년 후 전망</div>'
+            f'<div style="font-size:24px;font-weight:900;color:#1e293b;letter-spacing:-0.5px;'
+            f'line-height:1;margin-bottom:6px">{_rising}개 지역</div>'
+            f'<div style="font-size:12px;color:#64748b;margin-bottom:14px">'
+            f'5년 내 돌봄 수요 증가 예측 지역</div>'
+            f'<div style="display:flex;justify-content:space-between;'
+            f'padding:8px 0;border-top:1px solid #f8fafc">'
+            f'<span style="font-size:11px;color:#94a3b8">수요 감소·안정</span>'
+            f'<span style="font-size:14px;font-weight:700;color:#334155">'
+            f'{27 - _rising}개 지역</span></div>'
+            f'<div style="display:flex;justify-content:space-between;'
+            f'padding:7px 0;border-top:1px solid #f8fafc">'
+            f'<span style="font-size:11px;color:#94a3b8">최대 증가 지역</span>'
+            f'<span style="font-size:14px;font-weight:700;color:#334155">'
+            f'{_worst5y_nm}</span></div>'
+            f'<div style="display:flex;justify-content:space-between;'
+            f'padding:7px 0;border-top:1px solid #f8fafc;margin-bottom:14px">'
+            f'<span style="font-size:11px;color:#94a3b8">예상 수요 변화율</span>'
+            f'<span style="font-size:16px;font-weight:800;color:#7c3aed">'
+            f'+{_worst5y_pct:.1f}%</span></div>'
+            f'<div style="background:#f5f3ff;border-radius:8px;padding:9px 12px;'
+            f'font-size:11px;color:#6d28d9;line-height:1.65">'
+            f'지금 선제적 인프라 확충 계획을 수립하지 않으면 5년 내 위기 지역 전환이 예상됩니다.</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<div style='height:4px'></div>", unsafe_allow_html=True)
+    st.divider()
+    st.markdown(
+        '<div style="font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px">'
+        '📄 지역별 AI 정책 보고서 생성</div>'
+        '<div style="font-size:12px;color:#64748b;margin-bottom:12px">'
+        '지역을 선택하면 Claude AI가 해당 지역 맞춤형 정책 제안서를 자동 생성합니다.</div>',
+        unsafe_allow_html=True,
+    )
+
     col_sel, col_cost = st.columns([3, 1])
     with col_sel:
         ai_region = st.selectbox("보고서 생성할 지역 선택", df["name"].tolist(), key="ai_sel")

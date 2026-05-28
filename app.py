@@ -571,11 +571,12 @@ st.divider()
 # ════════════════════════════════
 # 탭 구성
 # ════════════════════════════════
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🗺  지도 대시보드",
     "🔍  지역 상세 분석",
     "💰  예산 배분 시뮬레이터",
     "📄  AI 정책 보고서",
+    "📐  분석 방법론",
 ])
 
 # ─────────────────────────────
@@ -1376,6 +1377,364 @@ export ANTHROPIC_API_KEY=sk-ant-...
                 file_name=f"정책보고서_{ai_region}.txt",
                 mime="text/plain",
             )
+
+# ─────────────────────────────
+# TAB 5: 분석 방법론
+# ─────────────────────────────
+with tab5:
+
+    # ── 상단 헤더 ──────────────────────────────────────────────
+    st.markdown(
+        '<div style="background:linear-gradient(135deg,#1B4D6B 0%,#2980B9 100%);'
+        'border-radius:14px;padding:22px 28px;margin-bottom:22px">'
+        '<div style="font-size:10px;font-weight:700;letter-spacing:2.5px;color:rgba(255,255,255,0.6);'
+        'text-transform:uppercase;margin-bottom:6px">ANALYTICAL FRAMEWORK</div>'
+        '<div style="font-size:22px;font-weight:800;color:white;letter-spacing:-0.5px">'
+        '불균형 지수 산출 방법론</div>'
+        '<div style="font-size:13px;color:rgba(255,255,255,0.8);margin-top:6px;line-height:1.6">'
+        '공공데이터 기반 수요·공급·불균형 지수 산출 공식 및 가중치 설정 근거를 명시합니다.</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── 1. 지수 체계 파이프라인 ────────────────────────────────
+    st.markdown('<p class="section-header">① 지수 체계 개요</p>', unsafe_allow_html=True)
+
+    _pipe_items = [
+        ("#e0f2fe", "#0369a1", "📦 원시 데이터",
+         "초등학생 수<br>맞벌이 비율<br>돌봄·방과후 이용인원<br>출생아 통계"),
+        ("#dbeafe", "#1d4ed8", "📊 공급 지수",
+         "돌봄교실 정원<br>방과후 ×0.35<br>지역돌봄 ×0.40<br>÷ 초등학생 수"),
+        ("#ede9fe", "#6d28d9", "📈 수요 지수",
+         "맞벌이 가구 비율<br>(0~1 정규화)"),
+        ("#fce7f3", "#9d174d", "⚖️ 불균형 지수",
+         "수요 지수<br>÷ 공급 지수<br>→ ABCD 유형 분류"),
+        ("#fef9c3", "#92400e", "🏷 위험 점수",
+         "불균형×20<br>+인구감소+20<br>+한부모×0.6<br>+출생변화×0.3"),
+    ]
+    _pipe_html = "<div style='display:flex;gap:0;align-items:stretch;flex-wrap:wrap;margin-bottom:20px'>"
+    for _i, (_bg, _col, _title, _body) in enumerate(_pipe_items):
+        _pipe_html += (
+            f"<div style='flex:1;min-width:130px;background:{_bg};"
+            f"border:1.5px solid {_col};border-radius:10px;padding:14px 12px;text-align:center;"
+            f"margin:3px'>"
+            f"<div style='font-size:13px;font-weight:800;color:{_col};margin-bottom:6px'>{_title}</div>"
+            f"<div style='font-size:11px;color:#374151;line-height:1.7'>{_body}</div>"
+            f"</div>"
+        )
+        if _i < len(_pipe_items) - 1:
+            _pipe_html += (
+                "<div style='display:flex;align-items:center;padding:0 2px;font-size:22px;"
+                "color:#94a3b8;flex-shrink:0'>→</div>"
+            )
+    _pipe_html += "</div>"
+    st.markdown(_pipe_html, unsafe_allow_html=True)
+
+    st.divider()
+
+    # ── 2. 공급 지수 ───────────────────────────────────────────
+    st.markdown('<p class="section-header">② 공급 지수 (Supply Index)</p>', unsafe_allow_html=True)
+
+    st.markdown(
+        '<div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;'
+        'padding:18px 22px;margin-bottom:16px">'
+        '<div style="font-size:11px;font-weight:700;color:#0369a1;letter-spacing:1px;'
+        'text-transform:uppercase;margin-bottom:10px">산출 공식</div>'
+        '<div style="font-size:16px;font-weight:700;color:#0c4a6e;line-height:2;font-family:monospace">'
+        'supply_idx =<br>'
+        '&nbsp;&nbsp;( 돌봄교실 정원 × <b>1.00</b><br>'
+        '&nbsp;&nbsp;+ 방과후학교 참여 인원 × <b>0.35</b><br>'
+        '&nbsp;&nbsp;+ 지역돌봄기관 참여 인원 × <b>0.40</b> )<br>'
+        '&nbsp;&nbsp;÷ 초등학생 수</div>'
+        '<div style="font-size:11px;color:#64748b;margin-top:10px">'
+        '* 지역돌봄기관: 지역아동센터 · 아이돌봄서비스 · 드림스타트 합산</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    # 가중치 근거 테이블
+    _wt_header = (
+        "<table style='width:100%;border-collapse:collapse;font-size:12.5px;"
+        "border-radius:10px;overflow:hidden;border:1px solid #e2e8f0'>"
+        "<thead><tr style='background:#1B4D6B;color:white'>"
+        "<th style='padding:10px 14px;text-align:left'>구성 요소</th>"
+        "<th style='padding:10px 14px;text-align:center;white-space:nowrap'>가중치</th>"
+        "<th style='padding:10px 14px;text-align:left'>운영 형태</th>"
+        "<th style='padding:10px 14px;text-align:left'>가중치 설정 근거</th>"
+        "<th style='padding:10px 14px;text-align:left;white-space:nowrap'>참고 문헌</th>"
+        "</tr></thead><tbody>"
+    )
+    _wt_rows = [
+        ("#f0fdf4",
+         "초등돌봄교실", "1.00", "종일제 (07:00~22:00)",
+         "법정 돌봄 서비스로 전일제 운영. 맞벌이·취약계층 우선 배정. "
+         "1명 정원 = 1명분 돌봄 수요 완전 충족",
+         "교육부, 『초등돌봄교실 운영 길라잡이』 (2022)"),
+        ("#fefce8",
+         "방과후학교", "0.35", "시간제 (1일 2~4시간)",
+         "교육·특기 프로그램 중심으로 완전한 돌봄 대체 불가. "
+         "전국 평균 참여 아동의 돌봄 수요 해소율 약 35% 추정",
+         "한국교육개발원, 『방과후학교 운영 실태 및 개선 방안』 (2021)"),
+        ("#eff6ff",
+         "지역돌봄기관", "0.40", "종일제 (8~9시간)",
+         "지역아동센터·아이돌봄서비스·드림스타트 등 취약계층 집중 지원. "
+         "학교 돌봄 대비 시설 규모 작으나 보완적 수요 충족 역할",
+         "보건복지부, 『지역아동센터 운영 매뉴얼』 (2023)"),
+    ]
+    _wt_body = ""
+    for _bg, _comp, _wt, _form, _basis, _ref in _wt_rows:
+        _wt_body += (
+            f"<tr style='background:{_bg};border-bottom:1px solid #e2e8f0'>"
+            f"<td style='padding:11px 14px;font-weight:700;color:#1e293b'>{_comp}</td>"
+            f"<td style='padding:11px 14px;text-align:center;font-size:16px;font-weight:800;"
+            f"color:#1B4D6B'>{_wt}</td>"
+            f"<td style='padding:11px 14px;color:#374151;white-space:nowrap'>{_form}</td>"
+            f"<td style='padding:11px 14px;color:#374151;line-height:1.5'>{_basis}</td>"
+            f"<td style='padding:11px 14px;color:#64748b;font-size:11.5px;line-height:1.5'>{_ref}</td>"
+            f"</tr>"
+        )
+    st.markdown(
+        _wt_header + _wt_body + "</tbody></table>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<div style='font-size:11px;color:#94a3b8;margin-top:6px;margin-bottom:20px'>"
+        "※ 방과후학교 참여인원은 NEIS Open API 실측값(가용 지역) 또는 전국 참여율 52.9% 기반 유형별 추정값 적용 "
+        "(교육부 방과후학교 통계, 2024.04)</div>",
+        unsafe_allow_html=True,
+    )
+
+    st.divider()
+
+    # ── 3. 수요 지수 ───────────────────────────────────────────
+    st.markdown('<p class="section-header">③ 수요 지수 (Demand Index)</p>', unsafe_allow_html=True)
+
+    _col_dem1, _col_dem2 = st.columns([1, 1])
+    with _col_dem1:
+        st.markdown(
+            '<div style="background:#faf5ff;border:2px solid #8b5cf6;border-radius:12px;'
+            'padding:18px 22px;height:100%">'
+            '<div style="font-size:11px;font-weight:700;color:#6d28d9;letter-spacing:1px;'
+            'text-transform:uppercase;margin-bottom:10px">산출 공식</div>'
+            '<div style="font-size:16px;font-weight:700;color:#3b0764;line-height:2;font-family:monospace">'
+            'demand_idx = 맞벌이 가구 비율 (0~1)</div>'
+            '<div style="font-size:11.5px;color:#6d28d9;margin-top:10px;line-height:1.7">'
+            '예) 맞벌이 비율 52.7% → demand_idx = 0.527</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+    with _col_dem2:
+        st.markdown(
+            '<div style="background:#f5f3ff;border:1px solid #c4b5fd;border-radius:12px;'
+            'padding:18px 22px;height:100%">'
+            '<div style="font-size:12px;font-weight:700;color:#4c1d95;margin-bottom:8px">'
+            '💡 맞벌이 비율을 수요 지표로 선택한 근거</div>'
+            '<ul style="font-size:12px;color:#374151;line-height:1.8;margin:0;padding-left:16px">'
+            '<li>돌봄공백 발생의 직접 원인 — 보호자 부재 시간 직결</li>'
+            '<li>통계청 <em>지역별고용조사</em>(2023 하반기) 시군구 단위 공표</li>'
+            '<li>교육부 <em>온종일 돌봄체계 구축 계획</em>(2020)의 수요 추정 방식과 일치</li>'
+            '<li>한부모 가구 비율은 위험 점수 보정 변수로 별도 반영</li>'
+            '</ul>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.divider()
+
+    # ── 4. 불균형 지수 + ABCD 분류 ───────────────────────────
+    st.markdown('<p class="section-header">④ 불균형 지수 및 유형 분류</p>', unsafe_allow_html=True)
+
+    _col_imb1, _col_imb2 = st.columns([1, 1])
+    with _col_imb1:
+        st.markdown(
+            '<div style="background:#fff1f2;border:2px solid #f43f5e;border-radius:12px;'
+            'padding:18px 22px;margin-bottom:14px">'
+            '<div style="font-size:11px;font-weight:700;color:#9f1239;letter-spacing:1px;'
+            'text-transform:uppercase;margin-bottom:10px">불균형 지수 공식</div>'
+            '<div style="font-size:16px;font-weight:700;color:#881337;line-height:2;font-family:monospace">'
+            'imbal_idx = demand_idx ÷ supply_idx</div>'
+            '</div>'
+            '<table style="width:100%;border-collapse:collapse;font-size:12.5px;'
+            'border:1px solid #fecdd3;border-radius:8px;overflow:hidden">'
+            '<thead><tr style="background:#f43f5e;color:white">'
+            '<th style="padding:8px 12px;text-align:center">지수 범위</th>'
+            '<th style="padding:8px 12px;text-align:center">상태</th>'
+            '<th style="padding:8px 12px;text-align:left">해석</th>'
+            '</tr></thead><tbody>'
+            '<tr style="background:#fff1f2">'
+            '<td style="padding:9px 12px;text-align:center;font-weight:700;color:#9f1239">&gt; 1.20</td>'
+            '<td style="padding:9px 12px;text-align:center">'
+            '<span style="background:#fee2e2;color:#991b1b;font-weight:700;font-size:11px;'
+            'padding:3px 10px;border-radius:12px">공급 부족</span></td>'
+            '<td style="padding:9px 12px;color:#374151">수요 대비 공급이 20% 이상 부족 → A형·C형 해당</td>'
+            '</tr>'
+            '<tr style="background:#f0fdf4">'
+            '<td style="padding:9px 12px;text-align:center;font-weight:700;color:#166534">0.80 ~ 1.20</td>'
+            '<td style="padding:9px 12px;text-align:center">'
+            '<span style="background:#dcfce7;color:#166534;font-weight:700;font-size:11px;'
+            'padding:3px 10px;border-radius:12px">균형</span></td>'
+            '<td style="padding:9px 12px;color:#374151">수요-공급 균형 상태 → D형 해당</td>'
+            '</tr>'
+            '<tr style="background:#fff7ed">'
+            '<td style="padding:9px 12px;text-align:center;font-weight:700;color:#92400e">&lt; 0.80</td>'
+            '<td style="padding:9px 12px;text-align:center">'
+            '<span style="background:#ffedd5;color:#92400e;font-weight:700;font-size:11px;'
+            'padding:3px 10px;border-radius:12px">공급 과잉</span></td>'
+            '<td style="padding:9px 12px;color:#374151">공급이 수요를 20% 이상 초과 → B형 해당</td>'
+            '</tr>'
+            '</tbody></table>',
+            unsafe_allow_html=True,
+        )
+    with _col_imb2:
+        st.markdown(
+            '<div style="font-size:12.5px;font-weight:700;color:#1e293b;margin-bottom:10px">'
+            '📋 ABCD 유형 분류 매트릭스</div>'
+            '<table style="width:100%;border-collapse:collapse;font-size:12px;'
+            'border:1px solid #e2e8f0;border-radius:10px;overflow:hidden">'
+            '<thead><tr style="background:#f8fafc">'
+            '<th style="padding:10px;border:1px solid #e2e8f0;color:#64748b"></th>'
+            '<th style="padding:10px;border:1px solid #e2e8f0;text-align:center;color:#9f1239">'
+            '공급 부족<br><span style="font-weight:400;font-size:11px">(imbal &gt; 1.20)</span></th>'
+            '<th style="padding:10px;border:1px solid #e2e8f0;text-align:center;color:#92400e">'
+            '공급 균형·과잉<br><span style="font-weight:400;font-size:11px">(imbal ≤ 1.20)</span></th>'
+            '</tr></thead><tbody>'
+            '<tr>'
+            '<td style="padding:10px;border:1px solid #e2e8f0;font-weight:700;color:#374151;'
+            'white-space:nowrap">인구감소<br>지역 ✓</td>'
+            '<td style="padding:12px;border:1px solid #e2e8f0;text-align:center;background:#fdecea">'
+            '<div style="font-size:22px;font-weight:900;color:#C0392B">A</div>'
+            '<div style="font-size:11px;color:#C0392B;font-weight:700">위기+공급부족</div>'
+            '<div style="font-size:10px;color:#64748b;margin-top:2px">긴급 개입 필요</div>'
+            '</td>'
+            '<td style="padding:12px;border:1px solid #e2e8f0;text-align:center;background:#fef3e8">'
+            '<div style="font-size:22px;font-weight:900;color:#E67E22">B</div>'
+            '<div style="font-size:11px;color:#E67E22;font-weight:700">위기+공급과잉</div>'
+            '<div style="font-size:10px;color:#64748b;margin-top:2px">시설 구조 전환</div>'
+            '</td>'
+            '</tr>'
+            '<tr>'
+            '<td style="padding:10px;border:1px solid #e2e8f0;font-weight:700;color:#374151;'
+            'white-space:nowrap">비감소<br>지역</td>'
+            '<td style="padding:12px;border:1px solid #e2e8f0;text-align:center;background:#eaf0f7">'
+            '<div style="font-size:22px;font-weight:900;color:#1B4D6B">C</div>'
+            '<div style="font-size:11px;color:#1B4D6B;font-weight:700">비위기+공급부족</div>'
+            '<div style="font-size:10px;color:#64748b;margin-top:2px">공급 확충 필요</div>'
+            '</td>'
+            '<td style="padding:12px;border:1px solid #e2e8f0;text-align:center;background:#eaf7ed">'
+            '<div style="font-size:22px;font-weight:900;color:#27AE60">D</div>'
+            '<div style="font-size:11px;color:#27AE60;font-weight:700">비위기+균형</div>'
+            '<div style="font-size:10px;color:#64748b;margin-top:2px">모니터링 유지</div>'
+            '</td>'
+            '</tr>'
+            '</tbody></table>'
+            '<div style="font-size:11px;color:#94a3b8;margin-top:8px">'
+            '인구감소지역 기준: 행정안전부 고시 제2024-15호 (전남 16개 군)</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.divider()
+
+    # ── 5. 위험 점수 ───────────────────────────────────────────
+    st.markdown('<p class="section-header">⑤ 위험 점수 (Risk Score, 0~100)</p>', unsafe_allow_html=True)
+
+    st.markdown(
+        '<div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:12px;'
+        'padding:18px 22px;margin-bottom:16px">'
+        '<div style="font-size:11px;font-weight:700;color:#92400e;letter-spacing:1px;'
+        'text-transform:uppercase;margin-bottom:10px">산출 공식</div>'
+        '<div style="font-size:15px;font-weight:700;color:#78350f;line-height:2.1;font-family:monospace">'
+        'risk_score = clip(<br>'
+        '&nbsp;&nbsp;(imbal_idx − 1) × <b>20</b><br>'
+        '&nbsp;&nbsp;+ 인구감소지역 여부 × <b>20</b><br>'
+        '&nbsp;&nbsp;+ 한부모가구비율(%) × <b>0.6</b><br>'
+        '&nbsp;&nbsp;+ max(0, −출생변화율(%)) × <b>0.3</b>,<br>'
+        '&nbsp;&nbsp;min=0, max=100 )</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    _rs_header = (
+        "<table style='width:100%;border-collapse:collapse;font-size:12.5px;"
+        "border:1px solid #fde68a;border-radius:10px;overflow:hidden'>"
+        "<thead><tr style='background:#f59e0b;color:white'>"
+        "<th style='padding:10px 14px;text-align:left'>구성 요소</th>"
+        "<th style='padding:10px 14px;text-align:center;white-space:nowrap'>가중치</th>"
+        "<th style='padding:10px 14px;text-align:left'>선정 근거</th>"
+        "<th style='padding:10px 14px;text-align:left;white-space:nowrap'>참고 기준</th>"
+        "</tr></thead><tbody>"
+    )
+    _rs_rows = [
+        ("#fffbeb", "불균형 지수 − 1", "×20",
+         "수요-공급 괴리 심각도의 핵심 지표. imbal=1.5이면 +10점 → 공급 부족 50%에 대한 선형 반영",
+         "자체 산출 지표"),
+        ("#fefce8", "인구감소지역 여부", "+20 (해당 시)",
+         "구조적 위험을 가중 반영. 인구감소지역은 공급 회복력이 낮아 동일 불균형이라도 위험도 높음",
+         "행정안전부 고시 제2024-15호"),
+        ("#fff7ed", "한부모가구비율 (%)", "×0.6",
+         "경제적 취약성이 높아 돌봄 공백의 실질적 피해가 집중. 비율 1%p 증가당 위험 0.6점 가산",
+         "복지부 한부모가족실태조사(2022)"),
+        ("#f0fdf4", "출생아 감소율 (음수 시)", "×0.3",
+         "5년 내 수요 급감 예고. 감소율이 클수록 공급 과잉 전환 리스크 가중 (증가 시 반영 안 함)",
+         "통계청 시군구별 출생통계(2023)"),
+    ]
+    _rs_body = ""
+    for _bg, _comp, _wt, _basis, _ref in _rs_rows:
+        _rs_body += (
+            f"<tr style='background:{_bg};border-bottom:1px solid #fde68a'>"
+            f"<td style='padding:11px 14px;font-weight:700;color:#1e293b'>{_comp}</td>"
+            f"<td style='padding:11px 14px;text-align:center;font-size:15px;font-weight:800;"
+            f"color:#92400e'>{_wt}</td>"
+            f"<td style='padding:11px 14px;color:#374151;line-height:1.5'>{_basis}</td>"
+            f"<td style='padding:11px 14px;color:#64748b;font-size:11.5px;line-height:1.5'>{_ref}</td>"
+            f"</tr>"
+        )
+    st.markdown(
+        _rs_header + _rs_body + "</tbody></table>",
+        unsafe_allow_html=True,
+    )
+
+    st.divider()
+
+    # ── 6. 5년 후 수요 예측 ────────────────────────────────────
+    st.markdown('<p class="section-header">⑥ 5년 후 수요 예측 지수</p>', unsafe_allow_html=True)
+
+    _col_f1, _col_f2 = st.columns([1, 1])
+    with _col_f1:
+        st.markdown(
+            '<div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;'
+            'padding:18px 22px">'
+            '<div style="font-size:11px;font-weight:700;color:#166534;letter-spacing:1px;'
+            'text-transform:uppercase;margin-bottom:10px">산출 공식</div>'
+            '<div style="font-size:15px;font-weight:700;color:#14532d;line-height:2.1;font-family:monospace">'
+            'demand_5y =<br>'
+            '&nbsp;&nbsp;demand_idx × (1 + 출생변화율 × <b>0.6</b>)<br>'
+            '<br>'
+            '<span style="font-size:12px;font-weight:400;color:#15803d">'
+            '계수 0.6 = 출생-수요 반영 지연 보정<br>'
+            '(출생 → 초등학령 도달까지 6년 소요)</span>'
+            '</div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+    with _col_f2:
+        st.markdown(
+            '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;'
+            'padding:18px 22px">'
+            '<div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:10px">'
+            '💡 0.6 계수 설정 근거</div>'
+            '<ul style="font-size:12px;color:#374151;line-height:1.8;margin:0;padding-left:16px">'
+            '<li>출생아 통계 → 초등 입학(만 6세)까지 6년의 시간 지연</li>'
+            '<li>5년 예측 창 기준: 현재 출생 변화의 약 60%만 초등학령에 반영</li>'
+            '<li>인구이동(전입·전출) 효과는 별도 보정 미적용 (보수적 추정)</li>'
+            '<li>출처: 교육부 <em>중장기 학생 수 추계 방법론</em>(2022),<br>'
+            '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;통계청 <em>장래인구추계</em>(2023)</li>'
+            '</ul>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<div style='margin-bottom:30px'></div>", unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════
 # 데이터 출처 & 라이선스 섹션

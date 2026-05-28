@@ -486,147 +486,148 @@ with st.expander("📋 프로젝트 소개 — 왜 지금 이 문제인가?", ex
         unsafe_allow_html=True
     )
 
-# ── 히어로 지표 → 4분면 카드  (st.columns 기반 레이아웃)
-st.markdown(
-    "<div style='font-size:12.5px;font-weight:700;color:#444;margin-bottom:6px'>"
-    "지역 유형 4분면 분류 체계 &nbsp;"
-    "<span style='font-size:11px;font-weight:400;color:#aaa'>공급 상태 × 소멸위기 여부</span>"
-    "</div>",
-    unsafe_allow_html=True,
-)
-
-# X축 레이블 (2열)
-_xc1, _xc2 = st.columns(2)
-_xc1.markdown(
-    "<div style='text-align:center;font-size:10px;color:#bbb;font-weight:600;"
-    "border-bottom:2px dashed #ddd;padding-bottom:3px;margin-bottom:4px'>"
-    "&#8592; 공급 부족 &nbsp;(불균형지수 &#8805; 1.2)</div>",
-    unsafe_allow_html=True,
-)
-_xc2.markdown(
-    "<div style='text-align:center;font-size:10px;color:#bbb;font-weight:600;"
-    "border-bottom:2px dashed #ddd;padding-bottom:3px;margin-bottom:4px'>"
-    "공급 과잉&#183;균형 &nbsp;(불균형지수 &#8804; 1.0) &#8594;</div>",
-    unsafe_allow_html=True,
-)
-
-# ── 행 1: 위기지역 (A형 / B형)
-st.markdown(
-    "<div style='font-size:10px;color:#bbb;font-weight:600;"
-    "margin:0 0 3px 0;padding:2px 0 2px 10px;border-left:3px dashed #ddd'>"
-    "&#9650; 위기지역 (소멸위기)</div>",
-    unsafe_allow_html=True,
-)
-_r1c1, _r1c2 = st.columns(2)
-
-with _r1c1:
+# ── 히어로 지표 → 4분면 카드  (접이식 expander)
+with st.expander("🗂 지역 유형 4분면 분류 체계", expanded=True):
     st.markdown(
-        f"<div style='background:#fdecea;border:2px solid #C0392B;border-radius:10px;padding:14px 16px'>"
-        f"<div style='display:flex;align-items:center;gap:12px;margin-bottom:10px'>"
-        f"<div style='background:#C0392B;color:white;font-size:18px;font-weight:900;"
-        f"min-width:40px;height:40px;border-radius:50%;display:flex;"
-        f"align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-0.5px'>A</div>"
-        f"<div style='flex:1'>"
-        f"<div style='font-size:17px;font-weight:800;color:#C0392B;line-height:1.2;letter-spacing:-0.3px'>위기 + 공급부족</div>"
-        f"</div>"
-        f"<div style='text-align:right;flex-shrink:0'>"
-        f"<span style='font-size:26px;font-weight:800;color:#C0392B;line-height:1'>{stats['A']}</span>"
-        f"<span style='font-size:12px;font-weight:600;color:#C0392B'> 개 지역</span>"
-        f"</div>"
-        f"</div>"
-        f"<div style='font-size:11.5px;color:#555;line-height:1.55;margin-bottom:9px'>"
-        f"소멸위기 지역이면서 돌봄 수요가 공급을 크게 초과. "
-        f"즉각적인 자원 투입이 필요한 <b style='color:#C0392B'>최우선 개입 대상</b>"
-        f"</div>"
-        f"<span style='background:#C0392B;color:white;font-size:10.5px;font-weight:700;"
-        f"padding:3px 11px;border-radius:4px;display:inline-block'>&#128680; 긴급 개입</span>"
-        f"</div>",
+        "<div style='font-size:14px;font-weight:700;color:#444;margin-bottom:6px'>"
+        "지역 유형 4분면 분류 체계 &nbsp;"
+        "<span style='font-size:12px;font-weight:400;color:#aaa'>공급 상태 × 소멸위기 여부</span>"
+        "</div>",
         unsafe_allow_html=True,
     )
 
-with _r1c2:
-    st.markdown(
-        f"<div style='background:#fef4e8;border:2px solid #E67E22;border-radius:10px;padding:14px 16px'>"
-        f"<div style='display:flex;align-items:center;gap:12px;margin-bottom:10px'>"
-        f"<div style='background:#E67E22;color:white;font-size:18px;font-weight:900;"
-        f"min-width:40px;height:40px;border-radius:50%;display:flex;"
-        f"align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-0.5px'>B</div>"
-        f"<div style='flex:1'>"
-        f"<div style='font-size:17px;font-weight:800;color:#E67E22;line-height:1.2;letter-spacing:-0.3px'>위기 + 공급과잉</div>"
-        f"</div>"
-        f"<div style='text-align:right;flex-shrink:0'>"
-        f"<span style='font-size:26px;font-weight:800;color:#E67E22;line-height:1'>{stats['B']}</span>"
-        f"<span style='font-size:12px;font-weight:600;color:#E67E22'> 개 지역</span>"
-        f"</div>"
-        f"</div>"
-        f"<div style='font-size:11.5px;color:#555;line-height:1.55;margin-bottom:9px'>"
-        f"인구감소로 수요는 줄었지만 시설은 남아 있는 지역. "
-        f"기존 인프라의 <b style='color:#E67E22'>복합 활용 전환</b>이 필요한 구조 개편 대상"
-        f"</div>"
-        f"<span style='background:#E67E22;color:white;font-size:10.5px;font-weight:700;"
-        f"padding:3px 11px;border-radius:4px;display:inline-block'>&#128260; 구조 전환</span>"
-        f"</div>",
+    # X축 레이블 (2열)
+    _xc1, _xc2 = st.columns(2)
+    _xc1.markdown(
+        "<div style='text-align:center;font-size:11px;color:#bbb;font-weight:600;"
+        "border-bottom:2px dashed #ddd;padding-bottom:3px;margin-bottom:4px'>"
+        "&#8592; 공급 부족 &nbsp;(불균형지수 &#8805; 1.2)</div>",
+        unsafe_allow_html=True,
+    )
+    _xc2.markdown(
+        "<div style='text-align:center;font-size:11px;color:#bbb;font-weight:600;"
+        "border-bottom:2px dashed #ddd;padding-bottom:3px;margin-bottom:4px'>"
+        "공급 과잉&#183;균형 &nbsp;(불균형지수 &#8804; 1.0) &#8594;</div>",
         unsafe_allow_html=True,
     )
 
-# ── 행 2: 비위기지역 (C형 / D형)
-st.markdown(
-    "<div style='font-size:10px;color:#bbb;font-weight:600;"
-    "margin:8px 0 3px 0;padding:2px 0 2px 10px;border-left:3px dashed #ddd'>"
-    "&#9660; 비위기지역</div>",
-    unsafe_allow_html=True,
-)
-_r2c1, _r2c2 = st.columns(2)
-
-with _r2c1:
+    # ── 행 1: 위기지역 (A형 / B형)
     st.markdown(
-        f"<div style='background:#eaf0f7;border:2px solid #1B4D6B;border-radius:10px;padding:14px 16px'>"
-        f"<div style='display:flex;align-items:center;gap:12px;margin-bottom:10px'>"
-        f"<div style='background:#1B4D6B;color:white;font-size:18px;font-weight:900;"
-        f"min-width:40px;height:40px;border-radius:50%;display:flex;"
-        f"align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-0.5px'>C</div>"
-        f"<div style='flex:1'>"
-        f"<div style='font-size:17px;font-weight:800;color:#1B4D6B;line-height:1.2;letter-spacing:-0.3px'>비위기 + 공급부족</div>"
-        f"</div>"
-        f"<div style='text-align:right;flex-shrink:0'>"
-        f"<span style='font-size:26px;font-weight:800;color:#1B4D6B;line-height:1'>{stats['C']}</span>"
-        f"<span style='font-size:12px;font-weight:600;color:#1B4D6B'> 개 지역</span>"
-        f"</div>"
-        f"</div>"
-        f"<div style='font-size:11.5px;color:#555;line-height:1.55;margin-bottom:9px'>"
-        f"도심 성장 지역으로 학생 수는 유지되나 돌봄 시설이 부족. "
-        f"<b style='color:#1B4D6B'>신규 시설 확충</b>이 시급한 도시 과밀 지역"
-        f"</div>"
-        f"<span style='background:#1B4D6B;color:white;font-size:10.5px;font-weight:700;"
-        f"padding:3px 11px;border-radius:4px;display:inline-block'>&#127959; 긴급 확충</span>"
-        f"</div>",
+        "<div style='font-size:11px;color:#bbb;font-weight:600;"
+        "margin:0 0 4px 0;padding:2px 0 2px 10px;border-left:3px dashed #ddd'>"
+        "&#9650; 위기지역 (소멸위기)</div>",
         unsafe_allow_html=True,
     )
+    _r1c1, _r1c2 = st.columns(2)
 
-with _r2c2:
+    with _r1c1:
+        st.markdown(
+            f"<div style='background:#fdecea;border:2px solid #C0392B;border-radius:12px;padding:18px 20px'>"
+            f"<div style='display:flex;align-items:center;gap:14px;margin-bottom:12px'>"
+            f"<div style='background:#C0392B;color:white;font-size:20px;font-weight:900;"
+            f"min-width:48px;height:48px;border-radius:50%;display:flex;"
+            f"align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-0.5px'>A</div>"
+            f"<div style='flex:1'>"
+            f"<div style='font-size:20px;font-weight:800;color:#C0392B;line-height:1.2;letter-spacing:-0.3px'>위기 + 공급부족</div>"
+            f"</div>"
+            f"<div style='text-align:right;flex-shrink:0'>"
+            f"<span style='font-size:30px;font-weight:800;color:#C0392B;line-height:1'>{stats['A']}</span>"
+            f"<span style='font-size:13px;font-weight:600;color:#C0392B'> 개 지역</span>"
+            f"</div>"
+            f"</div>"
+            f"<div style='font-size:12.5px;color:#555;line-height:1.6;margin-bottom:11px'>"
+            f"소멸위기 지역이면서 돌봄 수요가 공급을 크게 초과. "
+            f"즉각적인 자원 투입이 필요한 <b style='color:#C0392B'>최우선 개입 대상</b>"
+            f"</div>"
+            f"<span style='background:#C0392B;color:white;font-size:12px;font-weight:700;"
+            f"padding:5px 14px;border-radius:4px;display:inline-block'>&#128680; 긴급 개입</span>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+
+    with _r1c2:
+        st.markdown(
+            f"<div style='background:#fef4e8;border:2px solid #E67E22;border-radius:12px;padding:18px 20px'>"
+            f"<div style='display:flex;align-items:center;gap:14px;margin-bottom:12px'>"
+            f"<div style='background:#E67E22;color:white;font-size:20px;font-weight:900;"
+            f"min-width:48px;height:48px;border-radius:50%;display:flex;"
+            f"align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-0.5px'>B</div>"
+            f"<div style='flex:1'>"
+            f"<div style='font-size:20px;font-weight:800;color:#E67E22;line-height:1.2;letter-spacing:-0.3px'>위기 + 공급과잉</div>"
+            f"</div>"
+            f"<div style='text-align:right;flex-shrink:0'>"
+            f"<span style='font-size:30px;font-weight:800;color:#E67E22;line-height:1'>{stats['B']}</span>"
+            f"<span style='font-size:13px;font-weight:600;color:#E67E22'> 개 지역</span>"
+            f"</div>"
+            f"</div>"
+            f"<div style='font-size:12.5px;color:#555;line-height:1.6;margin-bottom:11px'>"
+            f"인구감소로 수요는 줄었지만 시설은 남아 있는 지역. "
+            f"기존 인프라의 <b style='color:#E67E22'>복합 활용 전환</b>이 필요한 구조 개편 대상"
+            f"</div>"
+            f"<span style='background:#E67E22;color:white;font-size:12px;font-weight:700;"
+            f"padding:5px 14px;border-radius:4px;display:inline-block'>&#128260; 구조 전환</span>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+
+    # ── 행 2: 비위기지역 (C형 / D형)
     st.markdown(
-        f"<div style='background:#eaf7ed;border:2px solid #27AE60;border-radius:10px;padding:14px 16px'>"
-        f"<div style='display:flex;align-items:center;gap:12px;margin-bottom:10px'>"
-        f"<div style='background:#27AE60;color:white;font-size:18px;font-weight:900;"
-        f"min-width:40px;height:40px;border-radius:50%;display:flex;"
-        f"align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-0.5px'>D</div>"
-        f"<div style='flex:1'>"
-        f"<div style='font-size:17px;font-weight:800;color:#27AE60;line-height:1.2;letter-spacing:-0.3px'>비위기 + 균형</div>"
-        f"</div>"
-        f"<div style='text-align:right;flex-shrink:0'>"
-        f"<span style='font-size:26px;font-weight:800;color:#27AE60;line-height:1'>{stats['D']}</span>"
-        f"<span style='font-size:12px;font-weight:600;color:#27AE60'> 개 지역</span>"
-        f"</div>"
-        f"</div>"
-        f"<div style='font-size:11.5px;color:#555;line-height:1.55;margin-bottom:9px'>"
-        f"수요와 공급이 균형을 이루고 있는 안정적 지역. "
-        f"현 수준 유지 및 <b style='color:#27AE60'>변화 추이 모니터링</b>으로 관리"
-        f"</div>"
-        f"<span style='background:#27AE60;color:white;font-size:10.5px;font-weight:700;"
-        f"padding:3px 11px;border-radius:4px;display:inline-block'>&#128203; 모니터링</span>"
-        f"</div>",
+        "<div style='font-size:11px;color:#bbb;font-weight:600;"
+        "margin:10px 0 4px 0;padding:2px 0 2px 10px;border-left:3px dashed #ddd'>"
+        "&#9660; 비위기지역</div>",
         unsafe_allow_html=True,
     )
+    _r2c1, _r2c2 = st.columns(2)
+
+    with _r2c1:
+        st.markdown(
+            f"<div style='background:#eaf0f7;border:2px solid #1B4D6B;border-radius:12px;padding:18px 20px'>"
+            f"<div style='display:flex;align-items:center;gap:14px;margin-bottom:12px'>"
+            f"<div style='background:#1B4D6B;color:white;font-size:20px;font-weight:900;"
+            f"min-width:48px;height:48px;border-radius:50%;display:flex;"
+            f"align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-0.5px'>C</div>"
+            f"<div style='flex:1'>"
+            f"<div style='font-size:20px;font-weight:800;color:#1B4D6B;line-height:1.2;letter-spacing:-0.3px'>비위기 + 공급부족</div>"
+            f"</div>"
+            f"<div style='text-align:right;flex-shrink:0'>"
+            f"<span style='font-size:30px;font-weight:800;color:#1B4D6B;line-height:1'>{stats['C']}</span>"
+            f"<span style='font-size:13px;font-weight:600;color:#1B4D6B'> 개 지역</span>"
+            f"</div>"
+            f"</div>"
+            f"<div style='font-size:12.5px;color:#555;line-height:1.6;margin-bottom:11px'>"
+            f"도심 성장 지역으로 학생 수는 유지되나 돌봄 시설이 부족. "
+            f"<b style='color:#1B4D6B'>신규 시설 확충</b>이 시급한 도시 과밀 지역"
+            f"</div>"
+            f"<span style='background:#1B4D6B;color:white;font-size:12px;font-weight:700;"
+            f"padding:5px 14px;border-radius:4px;display:inline-block'>&#127959; 긴급 확충</span>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
+
+    with _r2c2:
+        st.markdown(
+            f"<div style='background:#eaf7ed;border:2px solid #27AE60;border-radius:12px;padding:18px 20px'>"
+            f"<div style='display:flex;align-items:center;gap:14px;margin-bottom:12px'>"
+            f"<div style='background:#27AE60;color:white;font-size:20px;font-weight:900;"
+            f"min-width:48px;height:48px;border-radius:50%;display:flex;"
+            f"align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-0.5px'>D</div>"
+            f"<div style='flex:1'>"
+            f"<div style='font-size:20px;font-weight:800;color:#27AE60;line-height:1.2;letter-spacing:-0.3px'>비위기 + 균형</div>"
+            f"</div>"
+            f"<div style='text-align:right;flex-shrink:0'>"
+            f"<span style='font-size:30px;font-weight:800;color:#27AE60;line-height:1'>{stats['D']}</span>"
+            f"<span style='font-size:13px;font-weight:600;color:#27AE60'> 개 지역</span>"
+            f"</div>"
+            f"</div>"
+            f"<div style='font-size:12.5px;color:#555;line-height:1.6;margin-bottom:11px'>"
+            f"수요와 공급이 균형을 이루고 있는 안정적 지역. "
+            f"현 수준 유지 및 <b style='color:#27AE60'>변화 추이 모니터링</b>으로 관리"
+            f"</div>"
+            f"<span style='background:#27AE60;color:white;font-size:12px;font-weight:700;"
+            f"padding:5px 14px;border-radius:4px;display:inline-block'>&#128203; 모니터링</span>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
 
 st.divider()
 

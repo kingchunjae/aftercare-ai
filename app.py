@@ -505,16 +505,24 @@ if st.session_state.pop("go_to_detail", False):
     components.html(
         """<script>
         (function(){
-            var tries=0;
-            function clickTab(){
-                var tabs=window.parent.document.querySelectorAll('[data-baseweb="tab"]');
-                if(tabs.length>1){ tabs[1].click(); }
-                else if(tries++<20){ setTimeout(clickTab,100); }
+            var doc = (window.parent && window.parent.document) ? window.parent.document : document;
+            var n = 0;
+            function go(){
+                var el = null;
+                // 전략1: Streamlit stTabsList testid
+                var list = doc.querySelector('[data-testid="stTabsList"]');
+                if(list){ var bs=list.querySelectorAll('button'); if(bs.length>1) el=bs[1]; }
+                // 전략2: BaseWeb tab attribute
+                if(!el){ var ts=doc.querySelectorAll('[data-baseweb="tab"]'); if(ts.length>1) el=ts[1]; }
+                // 전략3: ARIA role
+                if(!el){ var rs=doc.querySelectorAll('[role="tab"]'); if(rs.length>1) el=rs[1]; }
+                if(el){ el.click(); return; }
+                if(n++<25) setTimeout(go,200);
             }
-            setTimeout(clickTab,300);
+            setTimeout(go,500);
         })();
         </script>""",
-        height=0,
+        height=50,
     )
 
 # ════════════════════════════════

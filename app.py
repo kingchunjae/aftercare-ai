@@ -78,68 +78,7 @@ st.markdown("""
     min-height: 0 !important;
   }
 
-  /* ── 데이터 출처 카드 ── */
-  .ds-wrap {
-    margin-top: 2px;
-  }
-  .ds-title {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.6px;
-    color: #1B4D6B; text-transform: uppercase;
-    display: flex; align-items: center; gap: 5px;
-    margin-bottom: 8px;
-  }
-  .ds-legend {
-    display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
-  }
-  .ds-legend span {
-    font-size: 10px; color: #555;
-    display: flex; align-items: center; gap: 4px;
-  }
-  .badge-real {
-    display: inline-block; padding: 1px 6px; border-radius: 3px;
-    font-size: 9px; font-weight: 700;
-    background: #e3f0e8; color: #256336; border: 1px solid #b2d9bc;
-  }
-  .badge-est {
-    display: inline-block; padding: 1px 6px; border-radius: 3px;
-    font-size: 9px; font-weight: 700;
-    background: #fff4e5; color: #a04e00; border: 1px solid #f5c97a;
-  }
-  .ds-card {
-    background: #f7f9fb;
-    border-radius: 7px;
-    border-left: 3px solid #1B4D6B;
-    padding: 8px 10px;
-    margin-bottom: 6px;
-  }
-  .ds-card.est {
-    background: #f9f9f7;
-    border-left-color: #c8b97a;
-  }
-  .ds-card-top {
-    display: flex; align-items: center;
-    justify-content: space-between; margin-bottom: 3px;
-  }
-  .ds-agency {
-    font-size: 10.5px; font-weight: 700; color: #1B4D6B;
-    display: flex; align-items: center; gap: 4px;
-  }
-  .ds-agency.est { color: #7a6e3f; }
-  .ds-items {
-    font-size: 11px; color: #222; font-weight: 500;
-    line-height: 1.5; margin-bottom: 2px;
-  }
-  .ds-pub {
-    font-size: 9.5px; color: #888; line-height: 1.45;
-  }
-  .ds-footer {
-    margin-top: 10px; padding-top: 8px;
-    border-top: 1px solid #e0ddd4;
-    font-size: 9.5px; color: #999; line-height: 1.5;
-    text-align: center;
-  }
-
-  /* ── 데이터 라이선스 섹션 카드 ── */
+/* ── 데이터 라이선스 섹션 카드 ── */
   .dc-card {
     background: white;
     border-radius: 12px;
@@ -367,71 +306,6 @@ with st.sidebar:
     col1.metric("총 대기 아동", f"{stats['total_waitlist']:,}명")
     col2.metric("평균 이용률", f"{stats['avg_util_rate']}%")
 
-    st.divider()
-    st.markdown(
-        f"""<div class="ds-wrap">
-  <div class="ds-title">&#128202; 데이터 출처</div>
-
-  <div class="ds-legend">
-    <span><span class="badge-real">실&nbsp;측</span> 공공데이터 원본</span>
-    <span><span class="badge-est">추&nbsp;정</span> 역산·시뮬레이션</span>
-  </div>
-
-  <div class="ds-card">
-    <div class="ds-card-top">
-      <span class="ds-agency">&#127963; 교육부</span>
-      <span class="badge-real">실&nbsp;측</span>
-    </div>
-    <div class="ds-items">이용인원 · 돌봄 학교 수</div>
-    <div class="ds-pub">초등돌봄교실 현황<br>공공데이터포털 (2023.04 기준)</div>
-  </div>
-
-  <div class="ds-card">
-    <div class="ds-card-top">
-      <span class="ds-agency">&#128200; 통계청</span>
-      <span class="badge-real">실&nbsp;측</span>
-    </div>
-    <div class="ds-items">맞벌이 가구 비율 · 합계출산율</div>
-    <div class="ds-pub">지역별고용조사 2023 하반기<br>시군구별 출생통계 2023</div>
-  </div>
-
-  <div class="ds-card">
-    <div class="ds-card-top">
-      <span class="ds-agency">&#127970; 행정안전부</span>
-      <span class="badge-real">실&nbsp;측</span>
-    </div>
-    <div class="ds-items">인구감소지역 지정 현황</div>
-    <div class="ds-pub">고시 제2024-15호 (전남 16개 군)</div>
-  </div>
-
-  <div class="ds-card">
-    <div class="ds-card-top">
-      <span class="ds-agency">&#128209; NEIS Open API</span>
-      <span class="badge-real">실&nbsp;측</span>
-    </div>
-    <div class="ds-items">초등학생 수 (시군구별)</div>
-    <div class="ds-pub">NEIS classInfo(2025학년도)<br>학급수 &times; KEDI 학급당 학생수(2024)</div>
-  </div>
-
-  {_neis_sidebar_card}
-
-  <div class="ds-card est">
-    <div class="ds-card-top">
-      <span class="ds-agency est">&#128295; 역산 추정</span>
-      <span class="badge-est">추&nbsp;정</span>
-    </div>
-    <div class="ds-items">돌봄 정원 · 대기아동 수</div>
-    <div class="ds-pub">시군구 단위 공공데이터 미공개<br>유형별 이용률 범위 역산 적용</div>
-  </div>
-
-  <div class="ds-footer">
-    분석 기준 시점: 2023년<br>
-    출처: <a href="https://data.go.kr" target="_blank" style="color:#1B4D6B">공공데이터포털</a> ·
-    <a href="https://kosis.kr" target="_blank" style="color:#1B4D6B">국가통계포털(KOSIS)</a>
-  </div>
-</div>""",
-        unsafe_allow_html=True,
-    )
 
 # ── 메인 헤더
 st.title("🏫 방과후·초등돌봄 수요-공급 불균형 AI 진단")

@@ -987,8 +987,6 @@ st.markdown("""
   border: 1px solid #dde6f0;
   box-shadow: 0 4px 24px rgba(27,77,107,0.07);
 ">
-
-  <!-- ── 헤더 ── -->
   <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:6px">
     <div>
       <div style="font-size:10px;font-weight:700;letter-spacing:2.5px;color:#94a3b8;text-transform:uppercase;margin-bottom:6px">
@@ -1018,7 +1016,6 @@ st.markdown("""
     </div>
   </div>
 
-  <!-- ── 구분선 + 범례 ── -->
   <div style="height:1px;background:linear-gradient(to right,#cbd5e1,transparent);margin:20px 0 16px 0"></div>
   <div style="display:flex;gap:20px;margin-bottom:22px;flex-wrap:wrap;align-items:center">
     <div style="display:flex;align-items:center;gap:7px">
@@ -1031,10 +1028,7 @@ st.markdown("""
     </div>
   </div>
 
-  <!-- ── 카드 그리드 ── -->
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(188px,1fr));gap:14px;margin-bottom:22px">
-
-    <!-- Card 1: 교육부 -->
     <div class="dc-card" style="border-top:4px solid #1565C0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="font-size:13.5px;font-weight:700;color:#1565C0">🏛 교육부</div>
@@ -1063,7 +1057,6 @@ st.markdown("""
       </div>
     </div>
 
-    <!-- Card 2: 통계청 -->
     <div class="dc-card" style="border-top:4px solid #7B1FA2">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="font-size:13.5px;font-weight:700;color:#7B1FA2">📊 통계청</div>
@@ -1092,7 +1085,6 @@ st.markdown("""
       </div>
     </div>
 
-    <!-- Card 3: 행정안전부 -->
     <div class="dc-card" style="border-top:4px solid #B71C1C">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="font-size:13.5px;font-weight:700;color:#B71C1C">🏠 행정안전부</div>
@@ -1121,7 +1113,6 @@ st.markdown("""
       </div>
     </div>
 
-    <!-- Card 4: NEIS Open API -->
     <div class="dc-card" style="border-top:4px solid #1B4D6B">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="font-size:13.5px;font-weight:700;color:#1B4D6B">📡 NEIS Open API</div>
@@ -1150,7 +1141,6 @@ st.markdown("""
       </div>
     </div>
 
-    <!-- Card 5: 자체 분석 산출값 -->
     <div class="dc-card" style="border-top:4px solid #d97706;
                                  background:linear-gradient(160deg,#fffbf5 0%,#fff7ed 100%)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -1182,7 +1172,6 @@ st.markdown("""
 
   </div>
 
-  <!-- ── 하단 라이선스 풋터 바 ── -->
   <div style="background:white;border-radius:12px;padding:16px 20px;
               border:1px solid #dde6f0;display:flex;align-items:flex-start;
               gap:14px;box-shadow:0 1px 6px rgba(0,0,0,0.04)">

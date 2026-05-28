@@ -152,6 +152,68 @@ st.markdown("""
     transform: translateY(-4px);
     box-shadow: 0 12px 32px rgba(0,0,0,0.13);
   }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     반응형 유틸리티 클래스
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .rsp-grid-2 { display: grid; grid-template-columns: repeat(2,1fr); }
+  .rsp-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); }
+  .rsp-grid-4 { display: grid; grid-template-columns: repeat(4,1fr); }
+  .rsp-pipeline { display: flex; flex-wrap: wrap; align-items: stretch; }
+  .rsp-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; }
+  .rsp-table-wrap table { min-width: 480px; }
+
+  /* ── 태블릿 이하 (≤ 768px) ── */
+  @media (max-width: 768px) {
+    /* 6탭 버튼 — 가로 스크롤 허용 */
+    div[data-testid="stTabs"] > div:first-child {
+      overflow-x: auto !important;
+      flex-wrap: nowrap !important;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    div[data-testid="stTabs"] > div:first-child::-webkit-scrollbar { display: none; }
+    div[data-testid="stTabs"] button {
+      font-size: 12px !important;
+      white-space: nowrap !important;
+      padding: 6px 10px !important;
+      flex-shrink: 0 !important;
+    }
+
+    /* Streamlit st.columns → 세로 스택 */
+    div[data-testid="column"] {
+      width: 100% !important;
+      flex: 1 1 100% !important;
+      min-width: 100% !important;
+    }
+
+    /* 그리드 반응형 축소 */
+    .rsp-grid-3 { grid-template-columns: 1fr !important; }
+    .rsp-grid-2 { grid-template-columns: 1fr !important; }
+    .rsp-grid-4 { grid-template-columns: repeat(2,1fr) !important; }
+
+    /* 파이프라인 → 세로 스택 */
+    .rsp-pipeline { flex-direction: column !important; }
+    .rsp-pipeline-arrow { display: none !important; }
+
+    /* 모든 테이블 폰트 축소 */
+    div[data-testid="stMarkdownContainer"] table { font-size: 11px !important; }
+    div[data-testid="stMarkdownContainer"] th,
+    div[data-testid="stMarkdownContainer"] td { padding: 6px 8px !important; }
+
+    /* 섹션 헤더 */
+    .section-header { font-size: 13px !important; }
+
+    /* 사이드바 */
+    div[data-testid="stSidebar"] { min-width: 0 !important; }
+  }
+
+  /* ── 스마트폰 (≤ 480px) ── */
+  @media (max-width: 480px) {
+    .rsp-grid-4 { grid-template-columns: 1fr !important; }
+    div[data-testid="stTabs"] button { font-size: 10px !important; padding: 4px 8px !important; }
+    .section-header { font-size: 12px !important; }
+  }
 </style>
 """, unsafe_allow_html=True)
 
@@ -386,7 +448,7 @@ with st.expander("📋 프로젝트 소개 — 왜 지금 이 문제인가?", ex
         '<div style="background:linear-gradient(135deg,#1B4D6B 0%,#2980B9 100%);color:white;border-radius:12px;padding:12px 18px;text-align:center;flex-shrink:0;box-shadow:0 4px 14px rgba(27,77,107,0.28)">'
         '<div style="font-size:9px;font-weight:600;opacity:0.75;letter-spacing:1.2px;margin-bottom:5px">🏆 대 회 출 품 작</div>'
         '<div style="font-size:12px;font-weight:800;line-height:1.55">제8회 교육<br>공공데이터<br>AI 활용대회</div></div></div>'
-        '<div style="background:#1B4D6B;border-radius:12px;padding:20px 24px;display:grid;grid-template-columns:repeat(3,1fr);margin-bottom:16px">'
+        '<div class="rsp-grid-3" style="background:#1B4D6B;border-radius:12px;padding:20px 24px;margin-bottom:16px">'
         '<div style="text-align:center;padding:4px 8px">'
         '<div style="font-size:34px;font-weight:900;color:#f97316;letter-spacing:-1.5px;line-height:1">4<span style="font-size:20px">만 명</span><span style="font-size:18px;color:#fb923c">+</span></div>'
         '<div style="font-size:10.5px;color:rgba(255,255,255,0.82);margin-top:7px;line-height:1.55">전국 초등돌봄 대기 아동<br><span style="color:rgba(255,255,255,0.45);font-size:9.5px">2023년 기준 · 교육부</span></div></div>'
@@ -398,7 +460,7 @@ with st.expander("📋 프로젝트 소개 — 왜 지금 이 문제인가?", ex
         '<div style="font-size:10.5px;color:rgba(255,255,255,0.82);margin-top:7px;line-height:1.55">행안부 지정 인구감소지역<br><span style="color:rgba(255,255,255,0.45);font-size:9.5px">2024년 기준</span></div></div></div>'
         '<div style="background:#fff7ed;border-radius:10px;padding:14px 20px;border-left:4px solid #f97316;margin-bottom:18px">'
         '<div style="font-size:13.5px;color:#1e293b;font-weight:500;line-height:1.75">같은 나라에서 <strong style="color:#ea580c">\'기다리는 아이\'</strong>와 <strong style="color:#1B4D6B">\'텅 빈 교실\'</strong>이 동시에 존재하는 역설 — 이것이 본 기획의 출발점입니다.</div></div>'
-        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px">'
+        '<div class="rsp-grid-3" style="gap:14px;margin-bottom:16px">'
         '<div style="background:white;border-radius:12px;padding:18px 18px 16px 18px;border:1px solid #e2e8f0;border-left:4px solid #f97316">'
         '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:10px">'
         '<span style="font-size:24px;font-weight:900;color:#f97316;font-family:Georgia,serif;letter-spacing:-0.5px;line-height:1;flex-shrink:0">01</span>'
@@ -854,8 +916,8 @@ with tab2:
         ]
 
         _h = (
-            '<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">'
-            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr">'
+            '<div class="rsp-table-wrap" style="border:1px solid #e2e8f0;border-radius:12px">'
+            '<div class="rsp-grid-3" style="min-width:420px">'
             f'<div style="background:{tinfo["color"]}18;padding:10px 16px;border-right:1px solid #e2e8f0;text-align:center">'
             f'<div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:3px">📍 현재 지역</div>'
             f'<div style="font-size:13px;font-weight:700;color:{tinfo["color"]}">{selected_name}</div></div>'
@@ -869,7 +931,7 @@ with tab2:
         for i, (label, cur_v, avg_v, cmp_v, (clr, arr)) in enumerate(rows_data):
             bg = "#fafafa" if i % 2 == 0 else "white"
             _h += (
-                f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;background:{bg};border-top:1px solid #f1f5f9">'
+                f'<div class="rsp-grid-3" style="min-width:420px;background:{bg};border-top:1px solid #f1f5f9">'
                 f'<div style="padding:11px 16px;border-right:1px solid #e2e8f0">'
                 f'<div style="font-size:10px;color:#94a3b8;margin-bottom:3px">{label}</div>'
                 f'<div style="font-size:18px;font-weight:700;color:{clr}">{cur_v}&nbsp;<span style="font-size:11px">{arr}</span></div></div>'
@@ -1413,7 +1475,7 @@ with tab5:
         ("#fef9c3", "#92400e", "🏷 위험 점수",
          "불균형×20<br>+인구감소+20<br>+한부모×0.6<br>+출생변화×0.3"),
     ]
-    _pipe_html = "<div style='display:flex;gap:0;align-items:stretch;flex-wrap:wrap;margin-bottom:20px'>"
+    _pipe_html = "<div class='rsp-pipeline' style='margin-bottom:20px'>"
     for _i, (_bg, _col, _title, _body) in enumerate(_pipe_items):
         _pipe_html += (
             f"<div style='flex:1;min-width:130px;background:{_bg};"
@@ -1425,8 +1487,8 @@ with tab5:
         )
         if _i < len(_pipe_items) - 1:
             _pipe_html += (
-                "<div style='display:flex;align-items:center;padding:0 2px;font-size:22px;"
-                "color:#94a3b8;flex-shrink:0'>→</div>"
+                "<div class='rsp-pipeline-arrow' style='display:flex;align-items:center;"
+                "padding:0 2px;font-size:22px;color:#94a3b8;flex-shrink:0'>→</div>"
             )
     _pipe_html += "</div>"
     st.markdown(_pipe_html, unsafe_allow_html=True)
@@ -1495,7 +1557,7 @@ with tab5:
             f"</tr>"
         )
     st.markdown(
-        _wt_header + _wt_body + "</tbody></table>",
+        "<div class='rsp-table-wrap'>" + _wt_header + _wt_body + "</tbody></table></div>",
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -1690,7 +1752,7 @@ with tab5:
             f"</tr>"
         )
     st.markdown(
-        _rs_header + _rs_body + "</tbody></table>",
+        "<div class='rsp-table-wrap'>" + _rs_header + _rs_body + "</tbody></table></div>",
         unsafe_allow_html=True,
     )
 
@@ -1801,7 +1863,7 @@ with tab6:
          "돌봄 공백 해소 가속",
          "공급 부족(A·C형) 지역에 집중 투자 → 전국 돌봄 대기 아동 감소 · 맞벌이 가구 경력 유지율 향상 기여"),
     ]
-    _impact_html = "<div style='display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px'>"
+    _impact_html = "<div class='rsp-grid-2' style='gap:12px;margin-bottom:20px'>"
     for _ibg, _ibc, _itc, _iic, _itl, _idesc in _impact_items:
         _impact_html += (
             f"<div style='background:{_ibg};border:1.5px solid {_ibc};"
@@ -1835,11 +1897,11 @@ with tab6:
          "Phase 4", "1년 이상", "실시간 자동화",
          "분기별 자동 업데이트<br>교육청 전산망 연동<br>정책 알림 자동 발송<br>국가 돌봄 모니터링"),
     ]
-    _phase_html = "<div style='display:flex;gap:0;align-items:stretch;flex-wrap:wrap;margin-bottom:20px'>"
+    _phase_html = "<div class='rsp-pipeline' style='margin-bottom:20px'>"
     for _pi, (_ic, _ac, _bg, _tc, _ph, _tm, _ttl, _body) in enumerate(_phases):
         _connector = (
-            "<div style='display:flex;align-items:center;padding:0 2px;"
-            "font-size:20px;color:#94a3b8;flex-shrink:0'>▶</div>"
+            "<div class='rsp-pipeline-arrow' style='display:flex;align-items:center;"
+            "padding:0 2px;font-size:20px;color:#94a3b8;flex-shrink:0'>▶</div>"
             if _pi < len(_phases) - 1 else ""
         )
         _phase_html += (
@@ -1921,7 +1983,7 @@ with tab6:
             f"</tr>"
         )
     st.markdown(
-        _da_header + _da_body + "</tbody></table>",
+        "<div class='rsp-table-wrap'>" + _da_header + _da_body + "</tbody></table></div>",
         unsafe_allow_html=True,
     )
 
@@ -2003,7 +2065,7 @@ with tab6:
          "연구 검증",
          "지수 산출 방법론 자문<br>전국 파일럿 연구 협력<br>정책 효과성 평가"),
     ]
-    _org_html = "<div style='display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px'>"
+    _org_html = "<div class='rsp-grid-4' style='gap:10px;margin-bottom:20px'>"
     for _obg, _obc, _oic, _onm, _orl, _odesc in _orgs:
         _org_html += (
             f"<div style='background:{_obg};border:1.5px solid {_obc};"

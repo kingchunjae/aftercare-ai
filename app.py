@@ -547,6 +547,7 @@ with tab1:
                     new_id = row["region_id"]
                     if st.session_state.get("selected_id") != new_id:
                         st.session_state["selected_id"] = new_id
+                        st.session_state["region_select"] = row["name"]
                         st.session_state["go_to_detail"] = True
                         st.rerun()
                     break
@@ -586,7 +587,7 @@ with tab2:
         sel_name = df[df["region_id"] == st.session_state["selected_id"]]["name"].values
         if len(sel_name): default_idx = region_names.index(sel_name[0])
 
-    selected_name = st.selectbox("분석할 지역 선택", region_names, index=default_idx)
+    selected_name = st.selectbox("분석할 지역 선택", region_names, index=default_idx, key="region_select")
     detail_row = df[df["name"] == selected_name].iloc[0]
     detail = get_region_detail(df, detail_row["region_id"])
     t = detail["type"]

@@ -303,6 +303,8 @@ with st.sidebar:
 st.title("🏫 방과후·초등돌봄 수요-공급 불균형 AI 진단")
 st.caption("교육 공공데이터 기반 지역소멸 위기 연계 분석 | 광역 통합 행정 시뮬레이션 (27개 시군구)")
 
+stats = get_summary_stats(df_filtered)
+
 # ── 프로젝트 소개 expander
 with st.expander("📋 프로젝트 소개 — 왜 지금 이 문제인가?", expanded=False):
     st.markdown(
@@ -529,7 +531,6 @@ with tab1:
                     break
 
         # ── 요약 통계 (지도 바로 아래)
-        stats = get_summary_stats(df_filtered)
         st.markdown('<p class="section-header">요약 통계</p>', unsafe_allow_html=True)
         _s1, _s2, _s3, _s4 = st.columns(4)
         _s1.metric("전체 지역", stats["total"])

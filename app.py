@@ -925,33 +925,83 @@ with tab3:
     with col_s2:
         st.metric("총 예산", f"{budget}억원", f"= {budget/10:.0f}십억원")
 
-    # 배분 원칙 컬러 카드
-    st.markdown("""
-<div style='display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 18px 0'>
-  <div style='flex:1;min-width:110px;background:#fdecea;
-       border-left:4px solid #C0392B;border-radius:6px;padding:9px 12px'>
-    <div style='font-size:13px;font-weight:700;color:#C0392B'>A형 &nbsp;45%</div>
-    <div style='font-size:11px;color:#666;margin-top:2px'>위기+공급부족<br>긴급 개입</div>
-  </div>
-  <div style='flex:1;min-width:110px;background:#eaf0f7;
-       border-left:4px solid #1B4D6B;border-radius:6px;padding:9px 12px'>
-    <div style='font-size:13px;font-weight:700;color:#1B4D6B'>C형 &nbsp;40%</div>
-    <div style='font-size:11px;color:#666;margin-top:2px'>비위기+공급부족<br>긴급 확충</div>
-  </div>
-  <div style='flex:1;min-width:110px;background:#eaf7ed;
-       border-left:4px solid #27AE60;border-radius:6px;padding:9px 12px'>
-    <div style='font-size:13px;font-weight:700;color:#27AE60'>D형 &nbsp;10%</div>
-    <div style='font-size:11px;color:#666;margin-top:2px'>비위기+균형<br>모니터링</div>
-  </div>
-  <div style='flex:1;min-width:110px;background:#fef3e8;
-       border-left:4px solid #E67E22;border-radius:6px;padding:9px 12px'>
-    <div style='font-size:13px;font-weight:700;color:#E67E22'>B형 &nbsp;&nbsp;5%</div>
-    <div style='font-size:11px;color:#666;margin-top:2px'>위기+공급과잉<br>구조 전환</div>
-  </div>
-</div>
-""", unsafe_allow_html=True)
+    # ② 시나리오 선택 ─────────────────────────────────
+    st.markdown('<p class="section-header">⚙️ 배분 시나리오 선택</p>', unsafe_allow_html=True)
 
-    result = simulate_budget(df_filtered, budget)
+    _SCENARIOS = {
+        "📊 기본 권장": {"A": 45, "B": 5, "C": 40, "D": 10, "desc": "수요·위험도 기반 기본 배분"},
+        "🔴 위기 집중": {"A": 65, "B": 5, "C": 25, "D": 5,  "desc": "A형 위기 지역 최우선 긴급 투입"},
+        "⚖️ 균형 배분": {"A": 35, "B": 15, "C": 35, "D": 15, "desc": "유형 간 균형·형평성 강조"},
+        "🏙 도심 확충": {"A": 25, "B": 5, "C": 60, "D": 10, "desc": "도심 성장지(C형) 공급 확대 집중"},
+        "✏️ 직접 설정": None,
+    }
+
+    _scenario_choice = st.radio(
+        "시나리오",
+        list(_SCENARIOS.keys()),
+        horizontal=True,
+        label_visibility="collapsed",
+    )
+
+    if _scenario_choice == "✏️ 직접 설정":
+        st.markdown(
+            "<div style='font-size:12px;color:#888;margin-bottom:6px'>"
+            "슬라이더로 각 유형별 배분 비율을 조정하세요. 합계가 100%가 되도록 자동 정규화됩니다.</div>",
+            unsafe_allow_html=True,
+        )
+        _sc1, _sc2, _sc3, _sc4 = st.columns(4)
+        with _sc1:
+            _a_raw = st.slider("🔴 A형 (%)", 0, 100, 45, step=5)
+        with _sc2:
+            _c_raw = st.slider("🔵 C형 (%)", 0, 100, 40, step=5)
+        with _sc3:
+            _d_raw = st.slider("🟢 D형 (%)", 0, 100, 10, step=5)
+        with _sc4:
+            _b_raw = st.slider("🟠 B형 (%)", 0, 100, 5, step=5)
+        _raw_sum = _a_raw + _b_raw + _c_raw + _d_raw
+        if _raw_sum == 0:
+            _raw_sum = 1
+        _pct = {
+            "A": round(_a_raw / _raw_sum * 100),
+            "B": round(_b_raw / _raw_sum * 100),
+            "C": round(_c_raw / _raw_sum * 100),
+            "D": round(_d_raw / _raw_sum * 100),
+        }
+        _scenario_desc = "직접 설정"
+    else:
+        _s = _SCENARIOS[_scenario_choice]
+        _pct = {"A": _s["A"], "B": _s["B"], "C": _s["C"], "D": _s["D"]}
+        _scenario_desc = _s["desc"]
+
+    _priority = {k: v / 100 for k, v in _pct.items()}
+
+    # 배분 비율 카드 (현재 시나리오 반영)
+    _card_styles = {
+        "A": ("background:#fdecea", "#C0392B", "위기+공급부족<br>긴급 개입"),
+        "B": ("background:#fef3e8", "#E67E22", "위기+공급과잉<br>구조 전환"),
+        "C": ("background:#eaf0f7", "#1B4D6B", "비위기+공급부족<br>긴급 확충"),
+        "D": ("background:#eaf7ed", "#27AE60", "비위기+균형<br>모니터링"),
+    }
+    _cards_html = (
+        "<div style='display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px 0'>"
+    )
+    for _t in ["A", "C", "D", "B"]:
+        _bg, _col, _lbl = _card_styles[_t]
+        _cards_html += (
+            f"<div style='flex:1;min-width:110px;{_bg};"
+            f"border-left:4px solid {_col};border-radius:6px;padding:9px 12px'>"
+            f"<div style='font-size:15px;font-weight:800;color:{_col}'>{_t}형 &nbsp;{_pct[_t]}%</div>"
+            f"<div style='font-size:11px;color:#666;margin-top:2px'>{_lbl}</div>"
+            f"</div>"
+        )
+    _cards_html += (
+        f"<div style='display:flex;align-items:center;padding:0 8px;"
+        f"font-size:11px;color:#888;font-style:italic'>{_scenario_desc}</div>"
+        "</div>"
+    )
+    st.markdown(_cards_html, unsafe_allow_html=True)
+
+    result = simulate_budget(df_filtered, budget, priority=_priority)
 
     # ② Before / After 핵심 지표 ──────────────────────
     avg_before  = result["imbal_before"].mean()

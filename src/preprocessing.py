@@ -62,7 +62,7 @@ def get_region_detail(df: pd.DataFrame, region_id: str) -> dict:
         "birth_rate":           float(row["birth_rate"]) if "birth_rate" in row.index else 0.0,
     }
 
-def simulate_budget(df: pd.DataFrame, budget_m: int, threshold: float = 0.2) -> pd.DataFrame:
+def simulate_budget(df: pd.DataFrame, budget_m: int, threshold: float = 0.2, priority: dict = None) -> pd.DataFrame:
     """예산(억원) → 유형 우선순위별 배분 + 물리 기반 불균형 지수 개선 시뮬레이션.
 
     개선 원리
@@ -79,8 +79,10 @@ def simulate_budget(df: pd.DataFrame, budget_m: int, threshold: float = 0.2) -> 
                     D=0.8 (이미 균형권, 효율 낮음)
                     B=0.0 (정원 신설 대신 구조 전환)
     B_UTIL_K      : B형 구조 전환 효율 계수 (클수록 imbal이 빨리 1.0에 접근)
+    priority      : 유형별 예산 배분 비율 dict (합이 1.0). None이면 기본값 사용.
     """
-    PRIORITY     = {"A": 0.45, "B": 0.05, "C": 0.40, "D": 0.10}
+    _default = {"A": 0.45, "B": 0.05, "C": 0.40, "D": 0.10}
+    PRIORITY     = priority if priority is not None else _default
     SLOTS_PER_OK = 80        # 1억원당 신규 돌봄 정원 (단가 약 400만원/명·년 기준)
     TYPE_EFF     = {"A": 2.2, "B": 0.0, "C": 1.8, "D": 0.8}
     B_UTIL_K     = 600       # B형 구조 전환 효율 계수

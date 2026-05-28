@@ -506,20 +506,30 @@ if st.session_state.pop("go_to_detail", False):
         """<script>
         (function(){
             var doc = (window.parent && window.parent.document) ? window.parent.document : document;
-            var n = 0;
-            function go(){
-                var el = null;
-                // 전략1: Streamlit stTabsList testid
+
+            function findTab2(){
                 var list = doc.querySelector('[data-testid="stTabsList"]');
-                if(list){ var bs=list.querySelectorAll('button'); if(bs.length>1) el=bs[1]; }
-                // 전략2: BaseWeb tab attribute
-                if(!el){ var ts=doc.querySelectorAll('[data-baseweb="tab"]'); if(ts.length>1) el=ts[1]; }
-                // 전략3: ARIA role
-                if(!el){ var rs=doc.querySelectorAll('[role="tab"]'); if(rs.length>1) el=rs[1]; }
-                if(el){ el.click(); return; }
-                if(n++<25) setTimeout(go,200);
+                if(list){ var bs=list.querySelectorAll('button'); if(bs.length>1) return bs[1]; }
+                var ts = doc.querySelectorAll('[data-baseweb="tab"]');
+                if(ts.length>1) return ts[1];
+                var rs = doc.querySelectorAll('[role="tab"]');
+                if(rs.length>1) return rs[1];
+                return null;
             }
-            setTimeout(go,500);
+
+            function tryClick(){
+                var btn = findTab2();
+                if(btn){ btn.click(); return; }
+                // DOM에 탭이 아직 없으면 MutationObserver로 대기
+                var obs = new MutationObserver(function(){
+                    var b = findTab2();
+                    if(b){ obs.disconnect(); b.click(); }
+                });
+                obs.observe(doc.body, {childList:true, subtree:true});
+                setTimeout(function(){ obs.disconnect(); }, 5000);
+            }
+
+            tryClick();
         })();
         </script>""",
         height=50,

@@ -571,12 +571,13 @@ st.divider()
 # ════════════════════════════════
 # 탭 구성
 # ════════════════════════════════
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🗺  지도 대시보드",
     "🔍  지역 상세 분석",
     "💰  예산 배분 시뮬레이터",
     "📄  AI 정책 보고서",
     "📐  분석 방법론",
+    "🌐  전국 확장 로드맵",
 ])
 
 # ─────────────────────────────
@@ -1733,46 +1734,93 @@ with tab5:
             unsafe_allow_html=True,
         )
 
-    st.divider()
+    st.markdown("<div style='margin-bottom:30px'></div>", unsafe_allow_html=True)
 
-    # ── 7. 전국 확장 로드맵 ────────────────────────────────────
-    st.markdown('<p class="section-header">⑦ 전국 확장 로드맵</p>', unsafe_allow_html=True)
 
-    # 헤더 배너
+# ─────────────────────────────
+# TAB 6: 전국 확장 로드맵
+# ─────────────────────────────
+with tab6:
+
+    # ── 탭 헤더 ────────────────────────────────────────────────
     st.markdown(
-        '<div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1B4D6B 100%);'
-        'border-radius:14px;padding:22px 28px;margin-bottom:20px">'
+        '<div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 55%,#1B4D6B 100%);'
+        'border-radius:14px;padding:26px 30px;margin-bottom:24px">'
         '<div style="font-size:10px;font-weight:700;letter-spacing:2.5px;'
         'color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:8px">'
         'SCALABILITY · NATIONWIDE DEPLOYMENT</div>'
-        '<div style="font-size:19px;font-weight:800;color:white;margin-bottom:12px">'
-        '이 시스템은 전국 228개 시군구에 즉시 적용 가능합니다</div>'
-        '<div style="display:flex;gap:32px;flex-wrap:wrap">'
+        '<div style="font-size:23px;font-weight:800;color:white;margin-bottom:6px">'
+        '전국 228개 시군구 확장 로드맵</div>'
+        '<div style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:20px;line-height:1.6">'
+        '현재 광주·전남 PoC를 기반으로, 동일한 데이터 파이프라인과 알고리즘을 활용해 '
+        '전국 모든 시군구로 확장하는 단계별 계획입니다.</div>'
+        '<div style="display:flex;gap:28px;flex-wrap:wrap;align-items:center">'
         '<div style="text-align:center">'
-        '<div style="font-size:32px;font-weight:900;color:#38bdf8;line-height:1">27</div>'
-        '<div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:3px">현재 시군구</div>'
+        '<div style="font-size:36px;font-weight:900;color:#38bdf8;line-height:1">27</div>'
+        '<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">현재 시군구</div>'
         '</div>'
-        '<div style="display:flex;align-items:center;font-size:28px;color:#475569">→</div>'
+        '<div style="font-size:32px;color:#334155;font-weight:300">→</div>'
         '<div style="text-align:center">'
-        '<div style="font-size:32px;font-weight:900;color:#34d399;line-height:1">228</div>'
-        '<div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:3px">전국 시군구</div>'
+        '<div style="font-size:36px;font-weight:900;color:#34d399;line-height:1">228</div>'
+        '<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">전국 시군구</div>'
         '</div>'
-        '<div style="display:flex;align-items:center;font-size:28px;color:#475569">·</div>'
+        '<div style="width:1px;height:40px;background:rgba(255,255,255,0.15)"></div>'
         '<div style="text-align:center">'
-        '<div style="font-size:32px;font-weight:900;color:#f59e0b;line-height:1">17</div>'
-        '<div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:3px">시도 교육청</div>'
+        '<div style="font-size:36px;font-weight:900;color:#f59e0b;line-height:1">17</div>'
+        '<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">시도 교육청</div>'
         '</div>'
-        '<div style="display:flex;align-items:center;font-size:28px;color:#475569">·</div>'
+        '<div style="width:1px;height:40px;background:rgba(255,255,255,0.15)"></div>'
         '<div style="text-align:center">'
-        '<div style="font-size:32px;font-weight:900;color:#c084fc;line-height:1">265만</div>'
-        '<div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:3px">대상 초등학생</div>'
+        '<div style="font-size:36px;font-weight:900;color:#c084fc;line-height:1">265만</div>'
+        '<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">대상 초등학생</div>'
+        '</div>'
+        '<div style="width:1px;height:40px;background:rgba(255,255,255,0.15)"></div>'
+        '<div style="text-align:center">'
+        '<div style="font-size:36px;font-weight:900;color:#fb7185;line-height:1">6종</div>'
+        '<div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px">전국 공개 데이터</div>'
         '</div>'
         '</div>'
         '</div>',
         unsafe_allow_html=True,
     )
 
-    # 4단계 로드맵 타임라인
+    # ── 전국 확장 기대 효과 ────────────────────────────────────
+    st.markdown('<p class="section-header">① 전국 확장 기대 효과</p>', unsafe_allow_html=True)
+
+    _impact_items = [
+        ("#fef3c7", "#d97706", "#92400e", "🎯",
+         "선제적 정책 대응",
+         "228개 시군구의 돌봄 불균형을 매년 자동 진단, 위기 지역을 사전에 식별해 '사후 대응'에서 '선제 투자'로 전환"),
+        ("#dcfce7", "#16a34a", "#14532d", "💰",
+         "예산 배분 효율화",
+         "위험 점수 기반 우선순위 배분으로 동일 예산 대비 수혜 아동 극대화. 전국 적용 시 연간 수백억원 효율 개선 추정"),
+        ("#dbeafe", "#2563eb", "#1e3a8a", "📊",
+         "교육청 의사결정 지원",
+         "17개 시도교육청이 관할 지역 지표를 실시간 조회·비교. AI 보고서로 정책 제안서 작성 시간 대폭 단축"),
+        ("#fce7f3", "#db2777", "#831843", "🌱",
+         "돌봄 공백 해소 가속",
+         "공급 부족(A·C형) 지역에 집중 투자 → 전국 돌봄 대기 아동 감소 · 맞벌이 가구 경력 유지율 향상 기여"),
+    ]
+    _impact_html = "<div style='display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px'>"
+    for _ibg, _ibc, _itc, _iic, _itl, _idesc in _impact_items:
+        _impact_html += (
+            f"<div style='background:{_ibg};border:1.5px solid {_ibc};"
+            f"border-radius:12px;padding:16px 18px'>"
+            f"<div style='display:flex;align-items:center;gap:10px;margin-bottom:8px'>"
+            f"<span style='font-size:22px'>{_iic}</span>"
+            f"<div style='font-size:13px;font-weight:800;color:{_itc}'>{_itl}</div>"
+            f"</div>"
+            f"<div style='font-size:12px;color:#374151;line-height:1.7'>{_idesc}</div>"
+            f"</div>"
+        )
+    _impact_html += "</div>"
+    st.markdown(_impact_html, unsafe_allow_html=True)
+
+    st.divider()
+
+    # ── 4단계 로드맵 타임라인 ────────────────────────────────
+    st.markdown('<p class="section-header">② 단계별 확장 계획</p>', unsafe_allow_html=True)
+
     _phases = [
         ("✅", "#22c55e", "#f0fdf4", "#166534",
          "Phase 1", "현재 완료", "광주·전남 PoC",
@@ -1811,10 +1859,16 @@ with tab5:
     _phase_html += "</div>"
     st.markdown(_phase_html, unsafe_allow_html=True)
 
-    # 데이터 가용성 테이블
+    st.divider()
+
+    # ── 데이터 가용성 테이블 ──────────────────────────────────
+    st.markdown('<p class="section-header">③ 전국 데이터 가용성 검증</p>', unsafe_allow_html=True)
+
     st.markdown(
-        '<div style="font-size:13px;font-weight:700;color:#1e293b;margin:18px 0 10px 0">'
-        '📦 전국 확장의 핵심 전제 — 모든 데이터 소스가 이미 전국 단위로 공개됩니다</div>',
+        '<div style="font-size:12.5px;color:#475569;margin-bottom:12px;line-height:1.7">'
+        '전국 확장의 핵심 전제인 <strong>데이터 가용성</strong>을 검증합니다. '
+        '본 시스템의 6개 핵심 데이터 소스는 모두 전국 시군구 단위로 이미 공개되어 있어 '
+        '<strong style="color:#1B4D6B">추가 수집 비용 없이 즉시 확장</strong>이 가능합니다.</div>',
         unsafe_allow_html=True,
     )
     _da_header = (
@@ -1871,20 +1925,19 @@ with tab5:
         unsafe_allow_html=True,
     )
 
-    # 기술 요건 — 완료 vs 필요
-    st.markdown(
-        '<div style="font-size:13px;font-weight:700;color:#1e293b;margin:20px 0 10px 0">'
-        '⚙️ 전국 확장을 위한 기술 요건</div>',
-        unsafe_allow_html=True,
-    )
+    st.divider()
+
+    # ── 기술 요건 — 완료 vs 필요 ─────────────────────────────
+    st.markdown('<p class="section-header">④ 기술 요건 현황</p>', unsafe_allow_html=True)
+
     _col_done, _col_need = st.columns([1, 1])
     _done_items = [
         ("데이터 수집 파이프라인", "NEIS API + 교육부 공공데이터포털 연동"),
-        ("지수 산출 알고리즘", "공급·수요·불균형·위험 점수 (지역 독립적)"),
+        ("지수 산출 알고리즘", "공급·수요·불균형·위험 점수 (지역 수 독립적)"),
         ("ABCD 유형 분류 로직", "인구감소지역 + 불균형 지수 2-변수 결정"),
         ("AI 정책 보고서 생성", "Claude API 기반 유형별 맞춤 보고서"),
         ("예산 배분 시뮬레이터", "유형별 우선순위 비율 파라미터화 완료"),
-        ("웹 대시보드 (Streamlit)", "지도·분석·시뮬레이터·보고서 4탭 구성"),
+        ("웹 대시보드 (Streamlit)", "지도·분석·시뮬레이터·보고서 탭 구성"),
     ]
     _need_items = [
         ("전국 교육청 API 키 등록", "17개 시도교육청 NEIS API 접근권 신청 (~2주)"),
@@ -1897,13 +1950,13 @@ with tab5:
     with _col_done:
         _d_html = (
             "<div style='background:#f0fdf4;border:1.5px solid #86efac;"
-            "border-radius:12px;padding:16px 18px'>"
+            "border-radius:12px;padding:16px 18px;height:100%'>"
             "<div style='font-size:12px;font-weight:800;color:#166534;margin-bottom:12px'>"
             "✅ 이미 구현 완료</div>"
         )
         for _t, _d in _done_items:
             _d_html += (
-                "<div style='display:flex;gap:10px;margin-bottom:9px;align-items:flex-start'>"
+                "<div style='display:flex;gap:10px;margin-bottom:10px;align-items:flex-start'>"
                 "<span style='color:#22c55e;font-size:14px;flex-shrink:0;margin-top:1px'>✓</span>"
                 "<div>"
                 f"<div style='font-size:12px;font-weight:700;color:#14532d'>{_t}</div>"
@@ -1915,13 +1968,13 @@ with tab5:
     with _col_need:
         _n_html = (
             "<div style='background:#eff6ff;border:1.5px solid #93c5fd;"
-            "border-radius:12px;padding:16px 18px'>"
+            "border-radius:12px;padding:16px 18px;height:100%'>"
             "<div style='font-size:12px;font-weight:800;color:#1d4ed8;margin-bottom:12px'>"
             "📋 전국 확장 시 추가 필요</div>"
         )
         for _t, _d in _need_items:
             _n_html += (
-                "<div style='display:flex;gap:10px;margin-bottom:9px;align-items:flex-start'>"
+                "<div style='display:flex;gap:10px;margin-bottom:10px;align-items:flex-start'>"
                 "<span style='color:#3b82f6;font-size:14px;flex-shrink:0;margin-top:1px'>→</span>"
                 "<div>"
                 f"<div style='font-size:12px;font-weight:700;color:#1e3a8a'>{_t}</div>"
@@ -1931,20 +1984,54 @@ with tab5:
         _n_html += "</div>"
         st.markdown(_n_html, unsafe_allow_html=True)
 
-    # 결론 배너
+    st.divider()
+
+    # ── 협력 기관 구조 ────────────────────────────────────────
+    st.markdown('<p class="section-header">⑤ 전국 운영 협력 체계</p>', unsafe_allow_html=True)
+
+    _orgs = [
+        ("#fef9c3", "#d97706", "🏛", "교육부",
+         "주관 기관",
+         "전국 초등돌봄 정책 총괄<br>공공데이터 공표 의무 기관<br>시도교육청 지침 하달"),
+        ("#dbeafe", "#2563eb", "🏫", "17개 시도교육청",
+         "데이터 제공·정책 실행",
+         "관할 시군구 데이터 검증<br>지역별 정책 실행 주체<br>NEIS API 접근권 보유"),
+        ("#f0fdf4", "#16a34a", "🖥", "공공데이터포털·NEIS",
+         "데이터 인프라",
+         "초등돌봄·방과후 실측 데이터<br>연 1회 이상 공개 갱신<br>Open API 무상 제공"),
+        ("#faf5ff", "#7c3aed", "🔬", "한국교육개발원",
+         "연구 검증",
+         "지수 산출 방법론 자문<br>전국 파일럿 연구 협력<br>정책 효과성 평가"),
+    ]
+    _org_html = "<div style='display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px'>"
+    for _obg, _obc, _oic, _onm, _orl, _odesc in _orgs:
+        _org_html += (
+            f"<div style='background:{_obg};border:1.5px solid {_obc};"
+            f"border-radius:12px;padding:16px 14px;text-align:center'>"
+            f"<div style='font-size:28px;margin-bottom:6px'>{_oic}</div>"
+            f"<div style='font-size:13px;font-weight:800;color:{_obc};margin-bottom:3px'>{_onm}</div>"
+            f"<div style='font-size:10px;color:#64748b;margin-bottom:8px;font-weight:600'>{_orl}</div>"
+            f"<div style='font-size:11px;color:#374151;line-height:1.7;text-align:left'>{_odesc}</div>"
+            f"</div>"
+        )
+    _org_html += "</div>"
+    st.markdown(_org_html, unsafe_allow_html=True)
+
+    # ── 결론 배너 ─────────────────────────────────────────────
     st.markdown(
         '<div style="background:linear-gradient(135deg,#fefce8 0%,#fef9c3 100%);'
-        'border:1.5px solid #fde047;border-radius:12px;padding:16px 22px;margin-top:18px">'
-        '<div style="display:flex;gap:14px;align-items:flex-start">'
-        '<span style="font-size:24px;flex-shrink:0">💡</span>'
+        'border:1.5px solid #fde047;border-radius:14px;padding:20px 26px;margin-top:4px">'
+        '<div style="display:flex;gap:16px;align-items:flex-start">'
+        '<span style="font-size:28px;flex-shrink:0">💡</span>'
         '<div>'
-        '<div style="font-size:13px;font-weight:800;color:#78350f;margin-bottom:6px">'
+        '<div style="font-size:14px;font-weight:800;color:#78350f;margin-bottom:8px">'
         '심사위원 예상 질문 — "이게 전국에 적용 가능한가?"</div>'
-        '<div style="font-size:12.5px;color:#92400e;line-height:1.8">'
+        '<div style="font-size:13px;color:#92400e;line-height:1.9">'
         '<strong>네, 기술적으로 즉시 가능합니다.</strong> '
         '본 시스템의 6개 핵심 데이터 소스는 모두 전국 시군구 단위로 공공 공개되어 있으며, '
         '지수 산출 알고리즘은 지역 수에 독립적으로 설계되었습니다. '
-        'NEIS API 등록과 교육청 협약만으로 <strong>3개월 내 전국 228개 시군구 확장</strong>이 가능합니다.'
+        'NEIS API 등록(약 2주)과 교육청 협약만으로 <strong>3개월 내 전국 228개 시군구 확장</strong>이 가능하며, '
+        '초기 구축 비용 없이 공공데이터만으로 운영 가능한 <strong>지속 가능한 정책 인프라</strong>입니다.'
         '</div>'
         '</div>'
         '</div>'

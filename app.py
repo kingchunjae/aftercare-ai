@@ -19,6 +19,7 @@ from src.visualize import (
 )
 from src.ai_report import generate_report, estimate_cost, generate_comparison_analysis
 from streamlit_folium import st_folium
+import streamlit.components.v1 as components
 
 # ── 페이지 설정
 st.set_page_config(
@@ -501,19 +502,19 @@ st.divider()
 
 # ── 마커 클릭 시 탭2 자동 전환
 if st.session_state.pop("go_to_detail", False):
-    st.markdown(
+    components.html(
         """<script>
         (function(){
             var tries=0;
-            function click(){
-                var tabs=window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
+            function clickTab(){
+                var tabs=window.parent.document.querySelectorAll('[data-baseweb="tab"]');
                 if(tabs.length>1){ tabs[1].click(); }
-                else if(tries++<15){ setTimeout(click,100); }
+                else if(tries++<20){ setTimeout(clickTab,100); }
             }
-            setTimeout(click,200);
+            setTimeout(clickTab,300);
         })();
         </script>""",
-        unsafe_allow_html=True,
+        height=0,
     )
 
 # ════════════════════════════════

@@ -499,6 +499,23 @@ with st.expander("🗂 지역 유형 4분면 분류 체계", expanded=True):
 
 st.divider()
 
+# ── 마커 클릭 시 탭2 자동 전환
+if st.session_state.pop("go_to_detail", False):
+    st.markdown(
+        """<script>
+        (function(){
+            var tries=0;
+            function click(){
+                var tabs=window.parent.document.querySelectorAll('button[data-baseweb="tab"]');
+                if(tabs.length>1){ tabs[1].click(); }
+                else if(tries++<15){ setTimeout(click,100); }
+            }
+            setTimeout(click,200);
+        })();
+        </script>""",
+        unsafe_allow_html=True,
+    )
+
 # ════════════════════════════════
 # 탭 구성
 # ════════════════════════════════
@@ -527,7 +544,11 @@ with tab1:
             raw = map_data["last_object_clicked_popup"]
             for _, row in df.iterrows():
                 if row["name"] in str(raw):
-                    st.session_state["selected_id"] = row["region_id"]
+                    new_id = row["region_id"]
+                    if st.session_state.get("selected_id") != new_id:
+                        st.session_state["selected_id"] = new_id
+                        st.session_state["go_to_detail"] = True
+                        st.rerun()
                     break
 
         # ── 요약 통계 (지도 바로 아래)

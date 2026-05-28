@@ -297,14 +297,6 @@ with st.sidebar:
         (~decline_only | df["decline"])
     ]
 
-    st.divider()
-    st.subheader("요약 통계")
-    stats = get_summary_stats(df_filtered)
-    col1, col2 = st.columns(2)
-    col1.metric("전체 지역", stats["total"])
-    col2.metric("고위험 지역", stats["high_risk_count"])
-    col1.metric("총 대기 아동", f"{stats['total_waitlist']:,}명")
-    col2.metric("평균 이용률", f"{stats['avg_util_rate']}%")
 
 
 # ── 메인 헤더
@@ -535,6 +527,15 @@ with tab1:
                 if row["name"] in str(raw):
                     st.session_state["selected_id"] = row["region_id"]
                     break
+
+        # ── 요약 통계 (지도 바로 아래)
+        stats = get_summary_stats(df_filtered)
+        st.markdown('<p class="section-header">요약 통계</p>', unsafe_allow_html=True)
+        _s1, _s2, _s3, _s4 = st.columns(4)
+        _s1.metric("전체 지역", stats["total"])
+        _s2.metric("고위험 지역", stats["high_risk_count"])
+        _s3.metric("총 대기 아동", f"{stats['total_waitlist']:,}명")
+        _s4.metric("평균 이용률", f"{stats['avg_util_rate']}%")
 
     with col_chart:
         st.markdown('<p class="section-header">유형 분포</p>', unsafe_allow_html=True)

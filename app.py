@@ -22,7 +22,7 @@ from streamlit_folium import st_folium
 
 # ── 페이지 설정
 st.set_page_config(
-    page_title="돌봄 AI 진단 시스템",
+    page_title="방과후·초등돌봄 AI 정책 분석 시스템 | 수요공급 불균형·예산 시뮬레이션",
     page_icon="🗺",
     layout="wide",
     initial_sidebar_state="expanded",

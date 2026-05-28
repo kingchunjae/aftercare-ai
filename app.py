@@ -17,7 +17,7 @@ from src.visualize import (
     build_map, imbal_gauge, demand_forecast_chart,
     type_pie, budget_bar, budget_dumbbell, importance_bar
 )
-from src.ai_report import generate_report, estimate_cost
+from src.ai_report import generate_report, estimate_cost, generate_comparison_analysis
 from streamlit_folium import st_folium
 
 # ── 페이지 설정
@@ -783,6 +783,135 @@ with tab2:
         st.markdown('<p class="section-header">변수 중요도</p>', unsafe_allow_html=True)
         fi = get_feature_importance(reg)
         st.plotly_chart(importance_bar(fi), use_container_width=True)
+
+    # ── 동일 유형 지역 비교 분석 ──────────────────────────────
+    st.divider()
+    st.markdown(
+        f'<div style="background:linear-gradient(135deg,#f0f6ff 0%,#f8f4ff 100%);border-radius:14px;padding:18px 22px 14px 22px;border:1px solid #dde8f4;margin-bottom:18px">'
+        f'<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+        f'<div style="background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:9px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔍</div>'
+        f'<div style="flex:1">'
+        f'<div style="font-size:15px;font-weight:800;color:#1e293b;letter-spacing:-0.3px">동일 유형 지역 비교 분석</div>'
+        f'<div style="font-size:12px;color:#64748b;margin-top:2px">같은 유형({t}형) 내 더 나은 성과를 보이는 지역과 지표를 비교하고, AI가 개선 전략을 도출합니다</div>'
+        f'</div>'
+        f'<div style="background:{tinfo["color"]};color:white;font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;white-space:nowrap">{t}형 · {tinfo["label"]}</div>'
+        f'</div></div>',
+        unsafe_allow_html=True,
+    )
+
+    same_type_df = df[df["region_type"] == t].copy()
+    same_type_other = (
+        same_type_df[same_type_df["name"] != selected_name]
+        .sort_values("risk_score")
+        .reset_index(drop=True)
+    )
+
+    if len(same_type_other) == 0:
+        st.info(f"{t}형 지역이 현재 선택 지역 1개뿐입니다. 비교 대상이 없습니다.")
+    else:
+        # ── 비교 대상 선택
+        _csel1, _csel2 = st.columns([4, 1])
+        with _csel1:
+            def _rank_fmt(i):
+                r = same_type_other.iloc[i]
+                tag = "🏆 최우수  " if i == 0 else f"{i+1}위  "
+                return f"{tag}{r['name']}  —  위험점수 {int(r['risk_score'])} / 불균형지수 {r['imbal_idx']:.2f} / 이용률 {r['care_util_rate']:.0f}%"
+            comp_idx = st.selectbox(
+                "비교 기준 지역 선택",
+                range(len(same_type_other)),
+                format_func=_rank_fmt,
+                key="comp_target",
+                help="동일 유형 내 비교할 지역을 선택합니다. 기본값은 위험점수 최저(최우수) 지역입니다.",
+            )
+        with _csel2:
+            st.metric(f"{t}형 전체", f"{len(same_type_df)}개 지역")
+
+        comp_row = same_type_other.iloc[comp_idx]
+        cur_row  = df[df["name"] == selected_name].iloc[0]
+
+        # ── 3-way 지표 비교 패널
+        t_avg_risk  = same_type_df["risk_score"].mean()
+        t_avg_imbal = same_type_df["imbal_idx"].mean()
+        t_avg_util  = same_type_df["care_util_rate"].mean()
+        t_avg_wait  = same_type_df["care_waitlist"].mean()
+
+        def _ind(cur, cmp, better="lower"):
+            if better == "lower":
+                good = cur <= cmp
+            elif better == "closer1":
+                good = abs(cur - 1.0) <= abs(cmp - 1.0)
+            else:
+                good = cur >= cmp
+            return ("#16a34a", "▲") if good else ("#dc2626", "▼")
+
+        rows_data = [
+            ("위험 점수",   f"{int(cur_row['risk_score'])}점",        f"{t_avg_risk:.1f}점",        f"{int(comp_row['risk_score'])}점",        _ind(cur_row['risk_score'],   comp_row['risk_score'],   "lower")),
+            ("불균형 지수", f"{cur_row['imbal_idx']:.3f}",            f"{t_avg_imbal:.3f}",          f"{comp_row['imbal_idx']:.3f}",            _ind(cur_row['imbal_idx'],    comp_row['imbal_idx'],    "closer1")),
+            ("이용률",      f"{cur_row['care_util_rate']:.1f}%",      f"{t_avg_util:.1f}%",          f"{comp_row['care_util_rate']:.1f}%",      _ind(cur_row['care_util_rate'],comp_row['care_util_rate'],"higher")),
+            ("대기 아동",   f"{int(cur_row['care_waitlist'])}명",     f"{t_avg_wait:.0f}명",         f"{int(comp_row['care_waitlist'])}명",     _ind(cur_row['care_waitlist'], comp_row['care_waitlist'], "lower")),
+        ]
+
+        _h = (
+            '<div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden">'
+            '<div style="display:grid;grid-template-columns:1fr 1fr 1fr">'
+            f'<div style="background:{tinfo["color"]}18;padding:10px 16px;border-right:1px solid #e2e8f0;text-align:center">'
+            f'<div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:3px">📍 현재 지역</div>'
+            f'<div style="font-size:13px;font-weight:700;color:{tinfo["color"]}">{selected_name}</div></div>'
+            '<div style="background:#f8fafc;padding:10px 16px;border-right:1px solid #e2e8f0;text-align:center">'
+            '<div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:3px">유형 평균</div>'
+            f'<div style="font-size:13px;font-weight:700;color:#64748b">{t}형 전체 ({len(same_type_df)}개)</div></div>'
+            '<div style="background:#f0fdf4;padding:10px 16px;text-align:center">'
+            '<div style="font-size:10px;color:#64748b;font-weight:600;margin-bottom:3px">🏆 비교 지역</div>'
+            f'<div style="font-size:13px;font-weight:700;color:#16a34a">{comp_row["name"]}</div></div></div>'
+        )
+        for i, (label, cur_v, avg_v, cmp_v, (clr, arr)) in enumerate(rows_data):
+            bg = "#fafafa" if i % 2 == 0 else "white"
+            _h += (
+                f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;background:{bg};border-top:1px solid #f1f5f9">'
+                f'<div style="padding:11px 16px;border-right:1px solid #e2e8f0">'
+                f'<div style="font-size:10px;color:#94a3b8;margin-bottom:3px">{label}</div>'
+                f'<div style="font-size:18px;font-weight:700;color:{clr}">{cur_v}&nbsp;<span style="font-size:11px">{arr}</span></div></div>'
+                f'<div style="padding:11px 16px;border-right:1px solid #e2e8f0;text-align:center;display:flex;align-items:center;justify-content:center">'
+                f'<div style="font-size:16px;font-weight:500;color:#64748b">{avg_v}</div></div>'
+                f'<div style="padding:11px 16px;text-align:center;display:flex;align-items:center;justify-content:center">'
+                f'<div style="font-size:18px;font-weight:700;color:#16a34a">{cmp_v}</div></div></div>'
+            )
+        _h += '</div>'
+        st.markdown(_h, unsafe_allow_html=True)
+
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+
+        # ── AI 분석 버튼
+        _comp_key = f"comp_{cur_row['region_id']}_{comp_row['region_id']}"
+        _c_btn, _c_hint = st.columns([3, 2])
+        with _c_btn:
+            _run_comp = st.button(
+                f"🤖 AI 비교 분석 실행 — {selected_name} vs {comp_row['name']}",
+                key="btn_comp_analysis",
+                type="primary",
+            )
+        with _c_hint:
+            st.caption(f"Claude Sonnet 4 기반 · 약 ₩15원 · {t}형 동일 유형 {len(same_type_df)}개 지역 데이터 활용")
+
+        if _run_comp:
+            st.session_state[_comp_key] = ""
+            _result = ""
+            with st.spinner(f"AI가 {selected_name}과 {comp_row['name']}을 비교 분석 중…"):
+                for _chunk in generate_comparison_analysis(
+                    cur_row, comp_row, same_type_df, TYPE_INFO[t]["label"], stream=True
+                ):
+                    _result += _chunk
+            st.session_state[_comp_key] = _result
+
+        if st.session_state.get(_comp_key):
+            st.markdown(
+                '<div style="background:linear-gradient(135deg,#f5f3ff 0%,#faf5ff 100%);'
+                'border-radius:12px;padding:20px 24px;border:1px solid #ddd6fe;margin-top:4px">'
+                '<div style="font-size:11px;font-weight:700;color:#7c3aed;letter-spacing:1.5px;'
+                'text-transform:uppercase;margin-bottom:12px">🤖 AI 비교 분석 결과</div></div>',
+                unsafe_allow_html=True,
+            )
+            st.markdown(st.session_state[_comp_key])
 
 # ─────────────────────────────
 # TAB 3: 예산 배분 시뮬레이터

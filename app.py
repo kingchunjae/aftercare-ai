@@ -245,7 +245,7 @@ with st.sidebar:
         f"<div style='font-size:17px;font-weight:800;color:#1a1a1a;"
         f"letter-spacing:-0.3px;line-height:1.2'>CareMap AI</div>"
         f"<div style='font-size:10px;color:#999;margin-top:3px;font-weight:500'>"
-        f"초등돌봄 불균형 진단 플랫폼</div>"
+        f"수요공급 불균형·예산 시뮬레이션</div>"
         f"</div>"
         f"</div>"
 
@@ -300,8 +300,8 @@ with st.sidebar:
 
 
 # ── 메인 헤더
-st.title("🏫 방과후·초등돌봄 수요-공급 불균형 AI 진단")
-st.caption("교육 공공데이터 기반 지역소멸 위기 연계 분석 | 광역 통합 행정 시뮬레이션 (27개 시군구)")
+st.title("🏫 방과후·초등돌봄 AI 정책 분석 시스템")
+st.caption("수요공급 불균형·예산 시뮬레이션 | 교육 공공데이터 기반 지역소멸 위기 연계 분석 | 광역 통합 행정 시뮬레이션 (27개 시군구)")
 
 stats = get_summary_stats(df_filtered)
 

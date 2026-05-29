@@ -244,7 +244,7 @@ with st.sidebar:
         f"font-size:22px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,0.18)'>&#127979;</div>"
         f"<div>"
         f"<div style='font-size:17px;font-weight:800;color:#1a1a1a;"
-        f"letter-spacing:-0.3px;line-height:1.2'>CareMap AI</div>"
+        f"letter-spacing:-0.3px;line-height:1.2'>AI EduBal</div>"
         f"<div style='font-size:10px;color:#999;margin-top:3px;font-weight:500'>"
         f"수요공급 불균형·예산 시뮬레이션</div>"
         f"</div>"

@@ -46,12 +46,16 @@ st.markdown("""
   }
   /* ── 탭 네비게이션 카드형 ── */
   div[data-testid="stTabs"] > div:first-child {
+    position: sticky;
+    top: 52px;
+    z-index: 999;
     background: #f1f5f9;
     border-radius: 14px;
     padding: 6px 8px;
     gap: 4px !important;
     border: 1px solid #e2e8f0;
-    box-shadow: inset 0 1px 4px rgba(0,0,0,0.06);
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.06),
+                0 4px 16px rgba(0,0,0,0.08);
     margin-bottom: 20px;
   }
   div[data-testid="stTabs"] button {

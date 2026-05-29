@@ -44,8 +44,46 @@ st.markdown("""
     font-size: 15px; font-weight: 600;
     color: #1B4D6B; margin: 16px 0 8px 0;
   }
+  /* ── 탭 네비게이션 카드형 ── */
+  div[data-testid="stTabs"] > div:first-child {
+    background: #f1f5f9;
+    border-radius: 14px;
+    padding: 6px 8px;
+    gap: 4px !important;
+    border: 1px solid #e2e8f0;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
   div[data-testid="stTabs"] button {
-    font-size: 14px; font-weight: 500;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 12px 20px !important;
+    border-radius: 10px !important;
+    color: #64748b !important;
+    background: transparent !important;
+    border: none !important;
+    transition: background 0.18s ease, color 0.18s ease,
+                box-shadow 0.18s ease, transform 0.18s ease !important;
+    letter-spacing: -0.2px !important;
+    white-space: nowrap !important;
+    min-height: 48px !important;
+  }
+  div[data-testid="stTabs"] button:hover {
+    background: white !important;
+    color: #1B4D6B !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.09) !important;
+    transform: translateY(-1px) !important;
+  }
+  div[data-testid="stTabs"] button[aria-selected="true"] {
+    background: white !important;
+    color: #1B4D6B !important;
+    font-weight: 700 !important;
+    box-shadow: 0 3px 14px rgba(27,77,107,0.14) !important;
+    border-bottom: 3px solid #1B4D6B !important;
+  }
+  div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+  div[data-testid="stTabs"] [data-baseweb="tab-border"] {
+    display: none !important;
   }
 
   /* 유형 필터 체크박스 행 */
@@ -113,10 +151,14 @@ st.markdown("""
       scrollbar-width: none;
     }
     div[data-testid="stTabs"] > div:first-child::-webkit-scrollbar { display: none; }
+    div[data-testid="stTabs"] > div:first-child {
+      border-radius: 10px !important;
+      padding: 4px 6px !important;
+    }
     div[data-testid="stTabs"] button {
       font-size: 12px !important;
-      white-space: nowrap !important;
-      padding: 6px 10px !important;
+      padding: 8px 12px !important;
+      min-height: 38px !important;
       flex-shrink: 0 !important;
     }
 
@@ -151,7 +193,7 @@ st.markdown("""
   /* ── 스마트폰 (≤ 480px) ── */
   @media (max-width: 480px) {
     .rsp-grid-4 { grid-template-columns: 1fr !important; }
-    div[data-testid="stTabs"] button { font-size: 10px !important; padding: 4px 8px !important; }
+    div[data-testid="stTabs"] button { font-size: 10px !important; padding: 6px 8px !important; min-height: 32px !important; }
     .section-header { font-size: 12px !important; }
   }
 </style>

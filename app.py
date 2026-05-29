@@ -684,120 +684,182 @@ with tab2:
     t = detail["type"]
     tinfo = TYPE_INFO[t]
 
-    # 지역 특성 설명
-    note = detail_row.get("region_note", "")
-    if note:
-        st.caption(f"📍 {note}")
+    # ── 공통 데이터 준비 ──────────────────────────────────────────
+    note     = detail_row.get("region_note", "")
+    risk     = detail["risk_score"]
+    risk_bar = min(int(risk / 50 * 100), 100)
 
-    # 유형 배지 + 위험 점수
-    col_badge, col_risk = st.columns([3, 1])
-    with col_badge:
-        st.markdown(
-            f"<span class='type-badge' style='background:{tinfo['color']};color:white'>"
-            f"{t}형 — {tinfo['label']}</span>"
-            f"  <span style='font-size:13px;color:#555'>{tinfo['action']}</span>",
-            unsafe_allow_html=True
+    _stu_src = detail.get("students_source", "추정")
+    if _stu_src == "NEIS학급기반":
+        _stu_help = (
+            "📂 공공데이터 원본 — NEIS Open API (open.neis.go.kr)\n\n"
+            "NEIS classInfo(2025학년도) 실측 학급수 × KEDI 교육통계 2024 시군구별 학급당 학생수"
         )
-    with col_risk:
-        st.metric("위험 점수", f"{detail['risk_score']} / 100")
+        _stu_src_html = (
+            "<span style='background:#e8f4fd;color:#1565c0;font-size:9px;"
+            "padding:2px 6px;border-radius:6px;font-weight:700'>NEIS Open API</span>"
+        )
+    else:
+        _stu_help = "출처: 언론 추정 (경향신문 2024, 시사저널 2025)"
+        _stu_src_html = (
+            "<span style='background:#fff3e0;color:#e65100;font-size:9px;"
+            "padding:2px 6px;border-radius:6px;font-weight:600'>추정</span>"
+        )
 
-    col_l, col_r = st.columns(2)
+    as_enr    = detail.get("afterschool_enrolled", 0)
+    as_src    = detail.get("afterschool_source", "추정")
+    ce_enr    = detail.get("custom_edu_enrolled", 0)
+    total_eff = int(detail["care_enrolled"] + as_enr * 0.35 + ce_enr * 0.40)
 
-    with col_l:
-        st.markdown('<p class="section-header">핵심 지표</p>', unsafe_allow_html=True)
-        m1, m2, m3 = st.columns(3)
-        _stu_src = detail.get("students_source", "추정")
-        if _stu_src == "NEIS학급기반":
-            _stu_help  = (
-                "📂 공공데이터 원본 — NEIS Open API (open.neis.go.kr)\n\n"
-                "NEIS classInfo(2025학년도) 실측 학급수 "
-                "× KEDI 교육통계 2024 시군구별 학급당 학생수"
-            )
-            _stu_badge = (
-                "<span style='background:#e8f4fd;color:#1565c0;font-size:10px;"
-                "padding:2px 7px;border-radius:8px;font-weight:700;letter-spacing:0.2px;'>"
-                "&#128209; NEIS Open API</span>"
-                "<span style='font-size:10px;color:#666;margin-left:5px;'>공공데이터 원본</span>"
-            )
-        else:
-            _stu_help  = "출처: 언론 추정 (경향신문 2024, 시사저널 2025)"
-            _stu_badge = (
-                "<span style='background:#fff3e0;color:#e65100;font-size:10px;"
-                "padding:2px 7px;border-radius:8px;font-weight:600;'>추정</span>"
-            )
-        m1.metric("초등학생", f"{detail['students']:,}명", help=_stu_help)
-        m1.markdown(_stu_badge, unsafe_allow_html=True)
-        m2.metric("맞벌이 가구", f"{detail['dual_pct']}%")
-        m3.metric("한부모 가구", f"{detail['single_pct']}%")
-        m1.metric("돌봄 대기자", f"{detail['waitlist']}명",
-                  help="시뮬레이션 추정값 (시군구 단위 공공 미공개)")
-        m2.metric("이용률", f"{detail['util_rate']}%",
-                  help="실측 이용인원 ÷ 추정 정원")
-        m3.metric("인구감소지역", "예" if detail["decline"] else "아니오")
-        m1.metric("돌봄교실 이용인원", f"{detail['care_enrolled']:,}명",
-                  help="교육부 초등돌봄교실 현황 2023년 4월 기준 실측값")
-        m2.metric("돌봄교실 학교 수", f"{detail['school_count']}개교",
-                  help="교육부 초등돌봄교실 현황 2023년 4월 기준 실측값")
-        m3.metric("합계출산율", f"{detail['birth_rate']}명",
-                  help="통계청 2023년 기준 (전국 평균 0.72명)")
+    if as_src == "NEIS기반추정":
+        _as_badge = ("<span style='background:#e8f4fd;color:#1565c0;border:1px solid #90caf9;"
+                     "font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;"
+                     "margin-left:4px'>NEIS 기반</span>")
+    elif as_src == "NEIS실측":
+        _as_badge = ("<span style='background:#e3f0e8;color:#256336;border:1px solid #b2d9bc;"
+                     "font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;"
+                     "margin-left:4px'>NEIS 실측</span>")
+    else:
+        _as_badge = ("<span style='background:#fff4e5;color:#a04e00;border:1px solid #f5c97a;"
+                     "font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;"
+                     "margin-left:4px'>추정</span>")
 
-        # ── 방과후·지역돌봄 공급 지표
-        st.markdown('<p class="section-header">방과후·지역돌봄 공급</p>',
-                    unsafe_allow_html=True)
-        s1, s2, s3 = st.columns(3)
-        as_enr    = detail.get("afterschool_enrolled", 0)
-        as_src    = detail.get("afterschool_source", "추정")
-        ce_enr    = detail.get("custom_edu_enrolled", 0)
-        # 통합 실질 공급 = 돌봄교실(×1.0) + 방과후학교(×0.35) + 지역돌봄기관(×0.40)
-        total_eff = int(detail["care_enrolled"] + as_enr * 0.35 + ce_enr * 0.40)
+    # ── 1. 히어로 카드 ────────────────────────────────────────────
+    _decline_badge = (
+        "<span style='background:#fef3c7;color:#92400e;font-size:11px;"
+        "font-weight:600;padding:3px 10px;border-radius:20px'>🏘 인구감소지역</span>"
+        if detail["decline"] else ""
+    )
+    st.markdown(
+        f"<div style='background:white;border-radius:14px;padding:22px 26px;"
+        f"border-left:6px solid {tinfo['color']};"
+        f"box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:20px'>"
+        f"<div style='display:flex;justify-content:space-between;"
+        f"align-items:flex-start;flex-wrap:wrap;gap:16px'>"
+        f"<div style='flex:1'>"
+        f"<div style='font-size:24px;font-weight:800;color:#1e293b;"
+        f"letter-spacing:-0.5px;margin-bottom:8px'>{selected_name}</div>"
+        f"<div style='display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px'>"
+        f"<span style='background:{tinfo['color']};color:white;font-size:12px;"
+        f"font-weight:700;padding:4px 14px;border-radius:20px'>"
+        f"{t}형 — {tinfo['label']}</span>"
+        f"<span style='background:#f1f5f9;color:#475569;font-size:12px;"
+        f"font-weight:600;padding:4px 12px;border-radius:20px'>{tinfo['action']}</span>"
+        f"{_decline_badge}"
+        f"</div>"
+        f"{'<div style=\"font-size:12px;color:#64748b\">📍 ' + note + '</div>' if note else ''}"
+        f"</div>"
+        f"<div style='text-align:right;min-width:170px'>"
+        f"<div style='font-size:11px;color:#94a3b8;font-weight:600;"
+        f"margin-bottom:4px;letter-spacing:0.5px'>위험 점수</div>"
+        f"<div style='font-size:36px;font-weight:900;color:{tinfo['color']};"
+        f"letter-spacing:-1px;line-height:1'>{risk}"
+        f"<span style='font-size:16px;color:#cbd5e1;font-weight:400'> / 100</span></div>"
+        f"<div style='background:#f1f5f9;border-radius:8px;height:8px;"
+        f"margin-top:10px;overflow:hidden'>"
+        f"<div style='background:{tinfo['color']};height:100%;width:{risk_bar}%;"
+        f"border-radius:8px'></div></div>"
+        f"<div style='font-size:10px;color:#94a3b8;margin-top:4px'>"
+        f"{'🔴 고위험' if risk>=30 else '🟠 주의' if risk>=20 else '🟢 안정'} 구간</div>"
+        f"</div></div></div>",
+        unsafe_allow_html=True,
+    )
 
-        # 방과후학교 참여 — 출처 배지 표시
-        if as_src == "NEIS기반추정":
-            _as_badge = "<span style='background:#e8f4fd;color:#1565c0;border:1px solid #90caf9;" \
-                        "font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;" \
-                        "margin-left:4px'>NEIS 기반</span>"
-        elif as_src == "NEIS실측":
-            _as_badge = "<span style='background:#e3f0e8;color:#256336;border:1px solid #b2d9bc;" \
-                        "font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;" \
-                        "margin-left:4px'>NEIS 실측</span>"
-        else:
-            _as_badge = "<span style='background:#fff4e5;color:#a04e00;border:1px solid #f5c97a;" \
-                        "font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;" \
-                        "margin-left:4px'>추정</span>"
+    # ── 2. KPI 3그룹 (수요 / 공급 / 취약성) ──────────────────────
+    _kpi_label = (
+        "<div style='font-size:10px;color:#64748b;margin-bottom:2px;line-height:1.2'>{label}</div>"
+        "<div style='font-size:18px;font-weight:700;color:{color};line-height:1.2'>{value}</div>"
+        "{sub}"
+    )
 
-        s1.markdown(
-            f"<div style='font-size:11px;color:#888;margin-bottom:2px'>방과후학교 참여{_as_badge}</div>"
-            f"<div style='font-size:22px;font-weight:700'>{as_enr:,}명</div>",
+    def _kv(label, value, color="#1e293b", sub=""):
+        return (
+            f"<div style='padding:8px 0;border-bottom:1px solid #f1f5f9'>"
+            f"<div style='font-size:10px;color:#64748b;margin-bottom:2px'>{label}</div>"
+            f"<div style='font-size:18px;font-weight:700;color:{color};line-height:1.2'>{value}</div>"
+            f"{'<div style=\"margin-top:2px\">' + sub + '</div>' if sub else ''}"
+            f"</div>"
+        )
+
+    grp_d, grp_s, grp_v = st.columns(3)
+
+    with grp_d:
+        st.markdown(
+            f"<div style='background:#fff5f5;border-radius:12px;padding:16px 18px;"
+            f"border-top:3px solid #C0392B;height:100%'>"
+            f"<div style='font-size:11px;font-weight:700;color:#C0392B;"
+            f"letter-spacing:0.5px;margin-bottom:12px'>📊 수요</div>"
+            + _kv("초등학생", f"{detail['students']:,}명", sub=_stu_src_html)
+            + _kv("돌봄 대기자", f"{detail['waitlist']}명", color="#C0392B")
+            + _kv("돌봄교실 이용인원", f"{detail['care_enrolled']:,}명")
+            + _kv("돌봄교실 학교 수", f"{detail['school_count']}개교")
+            + "</div>",
             unsafe_allow_html=True,
         )
-        s2.metric("지역돌봄기관 참여", f"{ce_enr:,}명",
-                  help="지역아동센터·아이돌봄서비스·드림스타트 등 지역사회 돌봄기관 참여 추정")
-        s3.metric("통합 실질 공급", f"{total_eff:,}명",
-                  help="돌봄교실(×1.0) + 방과후학교(×0.35) + 지역돌봄기관(×0.40) 가중합산")
 
-        if as_src == "NEIS기반추정":
-            st.caption(
-                "📡 방과후학교는 **NEIS 실측 학교 수** 기반 계산 | "
-                "지역돌봄기관은 통계 기반 추정 | "
-                "**통합 실질 공급** = 돌봄교실 + 방과후학교(×0.35) + 지역돌봄기관(×0.40)"
-            )
-        elif as_src == "NEIS실측":
-            st.caption(
-                "✅ 방과후학교는 **NEIS 직접 조회 실측값** | "
-                "지역돌봄기관은 통계 기반 추정 | "
-                "**통합 실질 공급** = 돌봄교실 + 방과후학교(×0.35) + 지역돌봄기관(×0.40)"
-            )
-        else:
-            st.caption(
-                "💡 방과후학교·지역돌봄기관 수치는 전국 참여율 통계 기반 추정값입니다. "
-                "NEIS API 키로 `data/fetch_neis_afterschool.py`를 실행하면 NEIS 기반 계산으로 전환됩니다."
-            )
+    with grp_s:
+        st.markdown(
+            f"<div style='background:#f0f7ff;border-radius:12px;padding:16px 18px;"
+            f"border-top:3px solid #1B4D6B;height:100%'>"
+            f"<div style='font-size:11px;font-weight:700;color:#1B4D6B;"
+            f"letter-spacing:0.5px;margin-bottom:12px'>🏫 공급</div>"
+            + _kv("이용률", f"{detail['util_rate']}%",
+                  color="#1B4D6B" if detail['util_rate'] >= 80 else "#E67E22")
+            + _kv(f"방과후학교 참여", f"{as_enr:,}명", sub=_as_badge)
+            + _kv("지역돌봄기관 참여", f"{ce_enr:,}명")
+            + _kv("통합 실질 공급", f"{total_eff:,}명", color="#1B4D6B")
+            + "</div>",
+            unsafe_allow_html=True,
+        )
 
-        # 데이터 출처 표기
-        if detail.get("data_note"):
-            st.caption(f"📊 출처: {detail['data_note']}")
+    with grp_v:
+        _imbal_color = (
+            "#C0392B" if detail['imbal_idx'] > 1.2
+            else "#27AE60" if detail['imbal_idx'] < 0.8
+            else "#E67E22"
+        )
+        _decline_txt = "예 🏘" if detail["decline"] else "아니오"
+        _decline_col = "#92400e" if detail["decline"] else "#27AE60"
+        st.markdown(
+            f"<div style='background:#fffbf0;border-radius:12px;padding:16px 18px;"
+            f"border-top:3px solid #E67E22;height:100%'>"
+            f"<div style='font-size:11px;font-weight:700;color:#E67E22;"
+            f"letter-spacing:0.5px;margin-bottom:12px'>⚠️ 취약성</div>"
+            + _kv("맞벌이 가구", f"{detail['dual_pct']}%")
+            + _kv("한부모 가구", f"{detail['single_pct']}%")
+            + _kv("합계출산율", f"{detail['birth_rate']}명")
+            + _kv("불균형 지수", f"{detail['imbal_idx']:.3f}", color=_imbal_color)
+            + _kv("인구감소지역", _decline_txt, color=_decline_col)
+            + "</div>",
+            unsafe_allow_html=True,
+        )
 
-        st.markdown('<p class="section-header">불균형 지수</p>', unsafe_allow_html=True)
+    st.markdown("<div style='margin-top:4px'></div>", unsafe_allow_html=True)
+
+    # ── 3. 차트 행: 5년 수요 예측(넓게) + 불균형 지수 게이지 ──────
+    st.divider()
+    chart_l, chart_r = st.columns([3, 2])
+
+    with chart_l:
+        st.markdown('<p class="section-header">📈 5년 후 수요 예측</p>', unsafe_allow_html=True)
+        pred = predict_region(detail_row, reg, scaler)
+        st.plotly_chart(
+            demand_forecast_chart(detail["demand_idx"], pred["demand_5y"], detail["name"]),
+            use_container_width=True,
+        )
+        trend_color = "#C0392B" if pred["trend"] == "증가" else "#27AE60"
+        st.markdown(
+            f"<div style='background:#f8fafc;border-radius:8px;padding:10px 14px;"
+            f"font-size:13px;color:#334155'>"
+            f"예측 결과: 수요 지수 <b style='color:{trend_color}'>{pred['trend']} "
+            f"{abs(pred['change_pct'])}%</b>"
+            f"&nbsp; (현재 <b>{detail['demand_idx']:.3f}</b> → "
+            f"5년 후 <b>{pred['demand_5y']:.3f}</b>)</div>",
+            unsafe_allow_html=True,
+        )
+
+    with chart_r:
+        st.markdown('<p class="section-header">⚖️ 불균형 지수</p>', unsafe_allow_html=True)
         st.plotly_chart(imbal_gauge(detail["imbal_idx"], t), use_container_width=True)
         balance_label = (
             "공급 부족" if detail['imbal_idx'] > 1.2
@@ -805,96 +867,98 @@ with tab2:
             else "균형"
         )
         st.caption(
-            f"수요 지수 {detail['demand_idx']:.3f} ÷ 복합 공급 지수 {detail['supply_idx']:.3f}"
+            f"수요 {detail['demand_idx']:.3f} ÷ 공급 {detail['supply_idx']:.3f}"
             f" = **{detail['imbal_idx']:.3f}** ({balance_label})\n\n"
-            f"공급 지수 = (돌봄교실×1.0 + 방과후학교×0.35 + 지역돌봄기관×0.40) ÷ 초등학생 수"
+            f"공급 지수 = 돌봄교실×1.0 + 방과후×0.35 + 지역돌봄×0.40"
         )
 
-        # ── 유치원 파이프라인 (수요 선행 지표)
-        st.markdown(
-            '<p class="section-header">유치원 파이프라인'
-            '<span style="font-size:10px;color:#aaa;font-weight:400;margin-left:6px">'
-            '수요 선행 지표 (1~3년)</span></p>',
-            unsafe_allow_html=True,
-        )
-        _kk1, _kk2, _kk3 = st.columns(3)
-        _kk1.metric(
-            "유치원 수",
-            f"{detail.get('kinder_count', 0)}개원",
-            help="유치원알리미 공시 기반 추정값",
-        )
-        _kk2.metric(
-            "유치원 원아",
-            f"{detail.get('kinder_enrolled', 0):,}명",
-            help="현재 재원 아동 수 (3~5세) — 1~3년 내 초등 입학 예정",
-        )
-        _kk3.metric(
-            "유치원 이용률",
-            f"{detail.get('kinder_util_rate', 0)*100:.1f}%",
-            help="재원 아동 ÷ 정원 (높을수록 해당 지역 돌봄 의존도 高)",
-        )
+    # ── 4. 위험 요인 Top3 + 변수 중요도 ─────────────────────────
+    ins_l, ins_r = st.columns(2)
 
-        # 파이프라인 지수 vs 전국 평균 시각화
-        _k_pip   = detail.get("kinder_pipeline_idx", 0.0)
-        _k_nat   = 0.215
-        _k_diff  = _k_pip - _k_nat
-        _k_color = "#C0392B" if _k_diff > 0.02 else ("#27AE60" if _k_diff < -0.02 else "#E67E22")
-        _k_arrow = "▲" if _k_diff > 0 else "▼"
-        _k_label = (
-            "전국 평균 상회 → 미래 수요 증가 예상" if _k_diff > 0.02
-            else "전국 평균 하회 → 미래 수요 감소 예상" if _k_diff < -0.02
-            else "전국 평균 수준 유지"
-        )
-        _k_trend = detail.get("kinder_trend_pct", 0.0)
-        st.markdown(
-            f"<div style='background:#f8fafc;border-radius:10px;padding:12px 16px;"
-            f"margin-top:6px;border-left:4px solid {_k_color}'>"
-            f"<div style='font-size:11px;color:#64748b;margin-bottom:5px'>"
-            f"파이프라인 지수 &nbsp;|&nbsp; 전국 평균 <b>0.215</b> 기준</div>"
-            f"<div style='display:flex;align-items:center;gap:12px;flex-wrap:wrap'>"
-            f"<span style='font-size:26px;font-weight:800;color:{_k_color};letter-spacing:-1px'>"
-            f"{_k_pip:.3f}</span>"
-            f"<div>"
-            f"<div style='font-size:12px;font-weight:700;color:{_k_color}'>"
-            f"{_k_arrow} {abs(_k_diff):.3f} &nbsp; {_k_label}</div>"
-            f"<div style='font-size:11px;color:#94a3b8;margin-top:2px'>"
-            f"원아 증감율 {_k_trend:+.1f}% &nbsp;|&nbsp; "
-            f"유치원 → 초등 입학 1~3년 시차</div>"
-            f"</div></div></div>",
-            unsafe_allow_html=True,
-        )
-        st.caption(
-            "📊 유치원알리미(e-childschoolinfo.moe.go.kr) 공시 기반 추정 "
-            "| 파이프라인 지수 = 유치원 원아 ÷ 초등학생 수"
-        )
-
-    with col_r:
-        st.markdown('<p class="section-header">5년 후 수요 예측</p>', unsafe_allow_html=True)
-        pred = predict_region(detail_row, reg, scaler)
-        st.plotly_chart(
-            demand_forecast_chart(detail["demand_idx"], pred["demand_5y"], detail["name"]),
-            use_container_width=True
-        )
-        trend_color = "#C0392B" if pred["trend"]=="증가" else "#27AE60"
-        st.markdown(
-            f"예측 결과: 수요 지수 <b style='color:{trend_color}'>{pred['trend']} "
-            f"{abs(pred['change_pct'])}%</b> (현재 {detail['demand_idx']:.3f} → "
-            f"5년 후 {pred['demand_5y']:.3f})",
-            unsafe_allow_html=True
-        )
-
-        st.markdown('<p class="section-header">위험 요인 Top 3</p>', unsafe_allow_html=True)
+    with ins_l:
+        st.markdown('<p class="section-header">🚨 위험 요인 Top 3</p>', unsafe_allow_html=True)
         for i, f in enumerate(detail["top3"], 1):
             st.markdown(
-                f"<div style='padding:6px 10px;margin-bottom:4px;"
-                f"border-left:3px solid {tinfo['color']};background:#fafaf7;border-radius:4px'>"
-                f"<b>{i}.</b> {f}</div>",
-                unsafe_allow_html=True
+                f"<div style='padding:10px 14px;margin-bottom:6px;"
+                f"border-left:4px solid {tinfo['color']};"
+                f"background:#fafaf7;border-radius:6px;font-size:13px'>"
+                f"<span style='color:{tinfo['color']};font-weight:800'>{i}.</span> {f}</div>",
+                unsafe_allow_html=True,
             )
 
-        st.markdown('<p class="section-header">변수 중요도</p>', unsafe_allow_html=True)
+    with ins_r:
+        st.markdown('<p class="section-header">📊 변수 중요도 (수요 예측 모델)</p>',
+                    unsafe_allow_html=True)
         fi = get_feature_importance(reg)
         st.plotly_chart(importance_bar(fi), use_container_width=True)
+
+    # ── 5. 유치원 파이프라인 (수요 선행 지표) ────────────────────
+    st.divider()
+    st.markdown(
+        '<p class="section-header">🏫 유치원 파이프라인'
+        '<span style="font-size:10px;color:#aaa;font-weight:400;margin-left:6px">'
+        '수요 선행 지표 (1~3년)</span></p>',
+        unsafe_allow_html=True,
+    )
+    _kk1, _kk2, _kk3 = st.columns(3)
+    _kk1.metric("유치원 수",    f"{detail.get('kinder_count', 0)}개원",
+                help="유치원알리미 공시 기반 추정값")
+    _kk2.metric("유치원 원아",  f"{detail.get('kinder_enrolled', 0):,}명",
+                help="현재 재원 아동 수 (3~5세) — 1~3년 내 초등 입학 예정")
+    _kk3.metric("유치원 이용률", f"{detail.get('kinder_util_rate', 0)*100:.1f}%",
+                help="재원 아동 ÷ 정원 (높을수록 해당 지역 돌봄 의존도 高)")
+
+    _k_pip   = detail.get("kinder_pipeline_idx", 0.0)
+    _k_nat   = 0.215
+    _k_diff  = _k_pip - _k_nat
+    _k_color = "#C0392B" if _k_diff > 0.02 else ("#27AE60" if _k_diff < -0.02 else "#E67E22")
+    _k_arrow = "▲" if _k_diff > 0 else "▼"
+    _k_label = (
+        "전국 평균 상회 → 미래 수요 증가 예상" if _k_diff > 0.02
+        else "전국 평균 하회 → 미래 수요 감소 예상" if _k_diff < -0.02
+        else "전국 평균 수준 유지"
+    )
+    _k_trend = detail.get("kinder_trend_pct", 0.0)
+    st.markdown(
+        f"<div style='background:#f8fafc;border-radius:10px;padding:12px 16px;"
+        f"margin-top:6px;border-left:4px solid {_k_color}'>"
+        f"<div style='font-size:11px;color:#64748b;margin-bottom:5px'>"
+        f"파이프라인 지수 &nbsp;|&nbsp; 전국 평균 <b>0.215</b> 기준</div>"
+        f"<div style='display:flex;align-items:center;gap:12px;flex-wrap:wrap'>"
+        f"<span style='font-size:26px;font-weight:800;color:{_k_color};letter-spacing:-1px'>"
+        f"{_k_pip:.3f}</span>"
+        f"<div><div style='font-size:12px;font-weight:700;color:{_k_color}'>"
+        f"{_k_arrow} {abs(_k_diff):.3f} &nbsp; {_k_label}</div>"
+        f"<div style='font-size:11px;color:#94a3b8;margin-top:2px'>"
+        f"원아 증감율 {_k_trend:+.1f}% &nbsp;|&nbsp; 유치원 → 초등 입학 1~3년 시차"
+        f"</div></div></div></div>",
+        unsafe_allow_html=True,
+    )
+    st.caption(
+        "📊 유치원알리미(e-childschoolinfo.moe.go.kr) 공시 기반 추정 "
+        "| 파이프라인 지수 = 유치원 원아 ÷ 초등학생 수"
+    )
+
+    # ── 6. 데이터 출처 캡션 ───────────────────────────────────────
+    if as_src == "NEIS기반추정":
+        st.caption(
+            "📡 방과후학교는 **NEIS 실측 학교 수** 기반 계산 | "
+            "지역돌봄기관은 통계 기반 추정 | "
+            "**통합 실질 공급** = 돌봄교실 + 방과후학교(×0.35) + 지역돌봄기관(×0.40)"
+        )
+    elif as_src == "NEIS실측":
+        st.caption(
+            "✅ 방과후학교는 **NEIS 직접 조회 실측값** | "
+            "지역돌봄기관은 통계 기반 추정 | "
+            "**통합 실질 공급** = 돌봄교실 + 방과후학교(×0.35) + 지역돌봄기관(×0.40)"
+        )
+    else:
+        st.caption(
+            "💡 방과후학교·지역돌봄기관 수치는 전국 참여율 통계 기반 추정값입니다. "
+            "NEIS API 키로 `data/fetch_neis_afterschool.py`를 실행하면 NEIS 기반 계산으로 전환됩니다."
+        )
+    if detail.get("data_note"):
+        st.caption(f"📊 출처: {detail['data_note']}")
 
     # ── 동일 유형 지역 비교 분석 ──────────────────────────────
     st.divider()

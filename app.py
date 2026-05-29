@@ -351,13 +351,13 @@ with st.sidebar:
         if st.button("전체", use_container_width=True, key="risk_preset_all"):
             st.session_state["risk_slider_val"] = 0
     with _pb1:
-        if st.button("주의 30+", use_container_width=True, key="risk_preset_30"):
-            st.session_state["risk_slider_val"] = 30
+        if st.button("주의 20+", use_container_width=True, key="risk_preset_20"):
+            st.session_state["risk_slider_val"] = 20
     with _pb2:
-        if st.button("위험 60+", use_container_width=True, key="risk_preset_60"):
-            st.session_state["risk_slider_val"] = 60
+        if st.button("위험 30+", use_container_width=True, key="risk_preset_30"):
+            st.session_state["risk_slider_val"] = 30
     risk_min = st.slider(
-        "최소 위험 점수", 0, 100,
+        "최소 위험 점수", 0, 50,
         key="risk_slider_val",
         label_visibility="collapsed",
     )

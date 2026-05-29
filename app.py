@@ -1118,136 +1118,139 @@ with tab3:
 
     result = simulate_budget(df_filtered, budget, priority=_priority)
 
-    # ② Before / After 핵심 지표 ──────────────────────
-    avg_before  = result["imbal_before"].mean()
-    avg_after   = result["imbal_after"].mean()
-    improve_pct = abs(avg_before - avg_after) / avg_before * 100
-    n_improved  = int(sum(
-        abs(r["imbal_after"] - 1.0) < abs(r["imbal_before"] - 1.0)
-        for _, r in result.iterrows()
-    ))
-    ac_budget        = result[result["region_type"].isin(["A","C"])]["allocated_억"].sum()
-    total_new_slots  = int(result["new_care_slots"].sum())
-    total_children   = int(result["children_added"].sum())
-    # 개선폭 = 균형(1.0)까지의 거리 감소량 — B형(공급과잉→균형)도 양수로 잡힘
-    result["개선폭"] = (
-        (result["imbal_before"] - 1.0).abs() - (result["imbal_after"] - 1.0).abs()
-    ).round(4)
-    best = result.nlargest(1, "개선폭").iloc[0]
+    if result.empty:
+        st.warning("필터 조건에 해당하는 지역이 없습니다. 유형 선택 또는 위험 점수 범위를 조정해 주세요.")
+    else:
+        # ② Before / After 핵심 지표 ──────────────────────
+        avg_before  = result["imbal_before"].mean()
+        avg_after   = result["imbal_after"].mean()
+        improve_pct = abs(avg_before - avg_after) / avg_before * 100
+        n_improved  = int(sum(
+            abs(r["imbal_after"] - 1.0) < abs(r["imbal_before"] - 1.0)
+            for _, r in result.iterrows()
+        ))
+        ac_budget        = result[result["region_type"].isin(["A","C"])]["allocated_억"].sum()
+        total_new_slots  = int(result["new_care_slots"].sum())
+        total_children   = int(result["children_added"].sum())
+        # 개선폭 = 균형(1.0)까지의 거리 감소량 — B형(공급과잉→균형)도 양수로 잡힘
+        result["개선폭"] = (
+            (result["imbal_before"] - 1.0).abs() - (result["imbal_after"] - 1.0).abs()
+        ).round(4)
+        best = result.nlargest(1, "개선폭").iloc[0]
 
-    st.markdown('<p class="section-header">📊 배분 효과 요약</p>', unsafe_allow_html=True)
+        st.markdown('<p class="section-header">📊 배분 효과 요약</p>', unsafe_allow_html=True)
 
-    # 배분 전 / 화살표 / 배분 후
-    col_bef, col_arr, col_aft = st.columns([11, 2, 11])
-    with col_bef:
-        st.markdown("""
+        # 배분 전 / 화살표 / 배분 후
+        col_bef, col_arr, col_aft = st.columns([11, 2, 11])
+        with col_bef:
+            st.markdown("""
 <div style='background:#f4f4f2;border-radius:8px;padding:10px 14px 4px;
      border-top:3px solid #bbb;margin-bottom:10px'>
   <span style='font-size:11px;font-weight:700;color:#999'>⬤ &nbsp;배분 전</span>
 </div>""", unsafe_allow_html=True)
-        b1, b2 = st.columns(2)
-        b1.metric("평균 불균형 지수", f"{avg_before:.3f}")
-        b2.metric("공급부족 지역", f"{stats['A']+stats['C']}개",
-                  help="A형(위기+공급부족) + C형(비위기+공급부족)")
+            b1, b2 = st.columns(2)
+            b1.metric("평균 불균형 지수", f"{avg_before:.3f}")
+            b2.metric("공급부족 지역", f"{stats['A']+stats['C']}개",
+                      help="A형(위기+공급부족) + C형(비위기+공급부족)")
 
-    with col_arr:
-        st.markdown(
-            "<div style='text-align:center;font-size:28px;font-weight:700;"
-            "color:#27AE60;padding-top:38px'>→</div>",
-            unsafe_allow_html=True)
+        with col_arr:
+            st.markdown(
+                "<div style='text-align:center;font-size:28px;font-weight:700;"
+                "color:#27AE60;padding-top:38px'>→</div>",
+                unsafe_allow_html=True)
 
-    with col_aft:
-        st.markdown("""
+        with col_aft:
+            st.markdown("""
 <div style='background:#eaf7ed;border-radius:8px;padding:10px 14px 4px;
      border-top:3px solid #27AE60;margin-bottom:10px'>
   <span style='font-size:11px;font-weight:700;color:#27AE60'>◯ &nbsp;배분 후 (예측)</span>
 </div>""", unsafe_allow_html=True)
-        a1, a2 = st.columns(2)
-        a1.metric("평균 불균형 지수", f"{avg_after:.3f}",
-                  f"▼ {improve_pct:.1f}% 개선")
-        a2.metric("균형 접근 지역", f"{n_improved}개",
-                  f"전체 {len(result)}개 중")
+            a1, a2 = st.columns(2)
+            a1.metric("평균 불균형 지수", f"{avg_after:.3f}",
+                      f"▼ {improve_pct:.1f}% 개선")
+            a2.metric("균형 접근 지역", f"{n_improved}개",
+                      f"전체 {len(result)}개 중")
 
-    # 보조 KPI 4개
-    st.markdown("---")
-    k1, k2, k3, k4 = st.columns(4)
-    k1.metric("A·C형 집중 투자",   f"{ac_budget:.1f}억원",
-              f"전체 예산의 {ac_budget/budget*100:.0f}%")
-    k2.metric("신규 확보 정원",    f"{total_new_slots:,}명",
-              help="A·C·D형 예산으로 새로 확보되는 돌봄 정원 합계 (1억원 ≈ 80명)")
-    k3.metric("추가 수혜 아동",    f"{total_children:,}명",
-              help="신규 정원에 실질적으로 배치될 아동 수 추정 (B형 구조전환 제외)")
-    k4.metric("최대 수혜 지역",    best["name"],
-              f"불균형 {best['imbal_before']:.2f} → {best['imbal_after']:.2f}")
+        # 보조 KPI 4개
+        st.markdown("---")
+        k1, k2, k3, k4 = st.columns(4)
+        k1.metric("A·C형 집중 투자",   f"{ac_budget:.1f}억원",
+                  f"전체 예산의 {ac_budget/budget*100:.0f}%")
+        k2.metric("신규 확보 정원",    f"{total_new_slots:,}명",
+                  help="A·C·D형 예산으로 새로 확보되는 돌봄 정원 합계 (1억원 ≈ 80명)")
+        k3.metric("추가 수혜 아동",    f"{total_children:,}명",
+                  help="신규 정원에 실질적으로 배치될 아동 수 추정 (B형 구조전환 제외)")
+        k4.metric("최대 수혜 지역",    best["name"],
+                  f"불균형 {best['imbal_before']:.2f} → {best['imbal_after']:.2f}")
 
-    st.divider()
+        st.divider()
 
-    # ③ 덤벨 차트 + 배분 비율 도넛 ───────────────────
-    col_chart, col_pie = st.columns([3, 1])
+        # ③ 덤벨 차트 + 배분 비율 도넛 ───────────────────
+        col_chart, col_pie = st.columns([3, 1])
 
-    with col_chart:
-        st.plotly_chart(budget_dumbbell(result), use_container_width=True)
+        with col_chart:
+            st.plotly_chart(budget_dumbbell(result), use_container_width=True)
 
-    with col_pie:
-        alloc  = result.groupby("region_type")["allocated_억"].sum().reset_index()
-        alloc["label"] = alloc["region_type"].map(lambda t: f"{t}형")
-        _colors = [TYPE_INFO[t]["color"] for t in alloc["region_type"]]
-        import plotly.graph_objects as _go
-        fig_pie = _go.Figure(_go.Pie(
-            labels=alloc["label"],
-            values=alloc["allocated_억"],
-            marker_colors=_colors,
-            hole=0.45,
-            textinfo="percent+label",
-            textfont_size=12,
-        ))
-        fig_pie.update_layout(
-            title=dict(text="유형별<br>예산 배분", font_size=12),
-            height=260,
-            margin=dict(l=10, r=10, t=55, b=10),
-            paper_bgcolor="rgba(0,0,0,0)",
-            showlegend=False,
-        )
-        st.plotly_chart(fig_pie, use_container_width=True)
-
-        # 유형별 배분 요약 텍스트
-        for _, ar in alloc.sort_values("allocated_억", ascending=False).iterrows():
-            c = TYPE_INFO[ar["region_type"]]["color"]
-            st.markdown(
-                f"<div style='display:flex;justify-content:space-between;"
-                f"font-size:12px;padding:2px 4px'>"
-                f"<span style='color:{c};font-weight:700'>{ar['label']}</span>"
-                f"<span>{ar['allocated_억']:.1f}억원</span></div>",
-                unsafe_allow_html=True,
+        with col_pie:
+            alloc  = result.groupby("region_type")["allocated_억"].sum().reset_index()
+            alloc["label"] = alloc["region_type"].map(lambda t: f"{t}형")
+            _colors = [TYPE_INFO[t]["color"] for t in alloc["region_type"]]
+            import plotly.graph_objects as _go
+            fig_pie = _go.Figure(_go.Pie(
+                labels=alloc["label"],
+                values=alloc["allocated_억"],
+                marker_colors=_colors,
+                hole=0.45,
+                textinfo="percent+label",
+                textfont_size=12,
+            ))
+            fig_pie.update_layout(
+                title=dict(text="유형별<br>예산 배분", font_size=12),
+                height=260,
+                margin=dict(l=10, r=10, t=55, b=10),
+                paper_bgcolor="rgba(0,0,0,0)",
+                showlegend=False,
             )
+            st.plotly_chart(fig_pie, use_container_width=True)
 
-    # ④ 지역별 배분 내역 테이블 ────────────────────────
-    st.markdown('<p class="section-header">지역별 배분 내역</p>', unsafe_allow_html=True)
-    show_cols = ["name","region_type","type_label","risk_score","care_waitlist",
-                 "allocated_억","imbal_before","imbal_after","개선폭",
-                 "new_care_slots","children_added","cost_per_child_만원"]
-    disp = result[show_cols].copy()
-    disp.columns = ["지역명","유형","유형설명","위험점수","대기아동",
-                    "배분(억)","배분전 불균형","배분후 불균형","균형접근도",
-                    "신규정원","수혜아동","아동당단가(만원)"]
-    _impr_max = float(result["개선폭"].clip(lower=0).max()) or 1.0
-    st.dataframe(
-        disp,
-        use_container_width=True,
-        column_config={
-            "위험점수": st.column_config.ProgressColumn(
-                "위험점수", min_value=0, max_value=100, format="%d",
-            ),
-            "균형접근도": st.column_config.ProgressColumn(
-                "균형접근도", min_value=0, max_value=_impr_max, format="%.4f",
-                help="|배분전-1.0| - |배분후-1.0|: 클수록 균형에 많이 접근",
-            ),
-        },
-    )
-    st.caption(
-        "💡 **신규정원**: A·C형 예산으로 확보되는 신규 돌봄 정원 (1억원 ≈ 80명, A형×2.2배 효율, C형×1.8배 효율) &nbsp;|&nbsp; "
-        "**균형접근도**: 불균형지수가 균형(1.0)에 가까워진 정도 — B형(공급과잉)도 구조전환으로 균형 접근 시 양수"
-    )
+            # 유형별 배분 요약 텍스트
+            for _, ar in alloc.sort_values("allocated_억", ascending=False).iterrows():
+                c = TYPE_INFO[ar["region_type"]]["color"]
+                st.markdown(
+                    f"<div style='display:flex;justify-content:space-between;"
+                    f"font-size:12px;padding:2px 4px'>"
+                    f"<span style='color:{c};font-weight:700'>{ar['label']}</span>"
+                    f"<span>{ar['allocated_억']:.1f}억원</span></div>",
+                    unsafe_allow_html=True,
+                )
+
+        # ④ 지역별 배분 내역 테이블 ────────────────────────
+        st.markdown('<p class="section-header">지역별 배분 내역</p>', unsafe_allow_html=True)
+        show_cols = ["name","region_type","type_label","risk_score","care_waitlist",
+                     "allocated_억","imbal_before","imbal_after","개선폭",
+                     "new_care_slots","children_added","cost_per_child_만원"]
+        disp = result[show_cols].copy()
+        disp.columns = ["지역명","유형","유형설명","위험점수","대기아동",
+                        "배분(억)","배분전 불균형","배분후 불균형","균형접근도",
+                        "신규정원","수혜아동","아동당단가(만원)"]
+        _impr_max = float(result["개선폭"].clip(lower=0).max()) or 1.0
+        st.dataframe(
+            disp,
+            use_container_width=True,
+            column_config={
+                "위험점수": st.column_config.ProgressColumn(
+                    "위험점수", min_value=0, max_value=100, format="%d",
+                ),
+                "균형접근도": st.column_config.ProgressColumn(
+                    "균형접근도", min_value=0, max_value=_impr_max, format="%.4f",
+                    help="|배분전-1.0| - |배분후-1.0|: 클수록 균형에 많이 접근",
+                ),
+            },
+        )
+        st.caption(
+            "💡 **신규정원**: A·C형 예산으로 확보되는 신규 돌봄 정원 (1억원 ≈ 80명, A형×2.2배 효율, C형×1.8배 효율) &nbsp;|&nbsp; "
+            "**균형접근도**: 불균형지수가 균형(1.0)에 가까워진 정도 — B형(공급과잉)도 구조전환으로 균형 접근 시 양수"
+        )
 
 # ─────────────────────────────
 # TAB 4: AI 정책 보고서

@@ -404,7 +404,7 @@ with st.expander("🗂 지역 유형 4분면 분류 체계", expanded=True):
             f"<span style='font-size:13px;font-weight:600;color:#C0392B'> 개 지역</span>"
             f"</div>"
             f"</div>"
-            f"<div style='font-size:12.5px;color:#555;line-height:1.6;margin-bottom:11px;min-height:60px'>"
+            f"<div style='font-size:12.5px;color:#555;line-height:1.6;margin-bottom:11px'>"
             f"소멸위기 지역이면서 돌봄 수요가 공급을 크게 초과. "
             f"즉각적인 자원 투입이 필요한 <b style='color:#C0392B'>최우선 개입 대상</b>"
             f"</div>"

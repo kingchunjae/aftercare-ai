@@ -46,9 +46,6 @@ st.markdown("""
   }
   /* ── 탭 네비게이션 카드형 ── */
   div[data-testid="stTabs"] > div:first-child {
-    position: sticky;
-    top: 52px;
-    z-index: 999;
     background: #f1f5f9;
     border-radius: 14px;
     padding: 6px 8px;
@@ -57,6 +54,10 @@ st.markdown("""
     box-shadow: inset 0 1px 4px rgba(0,0,0,0.06),
                 0 4px 16px rgba(0,0,0,0.08);
     margin-bottom: 20px;
+  }
+  /* 스티키 고정 시 적용되는 그림자 강화 */
+  div[data-testid="stTabs"] > div:first-child.tab-fixed {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.13) !important;
   }
   div[data-testid="stTabs"] button {
     font-size: 14px !important;
@@ -201,6 +202,73 @@ st.markdown("""
     .section-header { font-size: 12px !important; }
   }
 </style>
+""", unsafe_allow_html=True)
+
+# ── 탭 스티키 고정 (JavaScript position:fixed 방식) ──────────────
+st.markdown("""
+<script>
+(function(){
+  var HEADER = 52;
+  var scrollFn = null;
+
+  function attach() {
+    var list = document.querySelector('[data-testid="stTabs"] > div:first-child');
+    if (!list || list._stickyBound) return;
+    list._stickyBound = true;
+
+    // 자연 위치 측정 (fixed 해제 후)
+    list.style.cssText = '';
+    list.classList.remove('tab-fixed');
+    var nat   = list.getBoundingClientRect().top + window.pageYOffset;
+    var listH = list.offsetHeight;
+
+    // 탭 패널 컨테이너 (콘텐츠 밀림 방지용 padding)
+    var panel = list.nextElementSibling;
+
+    if (scrollFn) window.removeEventListener('scroll', scrollFn);
+
+    scrollFn = function() {
+      if (!document.contains(list)) { list._stickyBound = false; return; }
+      var fixed = window.pageYOffset > nat - HEADER;
+      if (fixed) {
+        var pw = list.parentElement.getBoundingClientRect();
+        list.style.position  = 'fixed';
+        list.style.top       = HEADER + 'px';
+        list.style.left      = pw.left + 'px';
+        list.style.width     = pw.width + 'px';
+        list.style.zIndex    = '9999';
+        list.style.marginBottom = '0';
+        list.classList.add('tab-fixed');
+        if (panel) panel.style.paddingTop = (listH + 20) + 'px';
+      } else {
+        list.style.cssText = '';
+        list.classList.remove('tab-fixed');
+        if (panel) panel.style.paddingTop = '';
+      }
+    };
+
+    window.addEventListener('scroll', scrollFn, { passive: true });
+
+    window.addEventListener('resize', function() {
+      if (list.style.position === 'fixed') {
+        var pw = list.parentElement.getBoundingClientRect();
+        list.style.left  = pw.left  + 'px';
+        list.style.width = pw.width + 'px';
+      }
+    });
+
+    scrollFn();
+  }
+
+  // Streamlit 리렌더 후 새 탭 엘리먼트 감지
+  setInterval(function() {
+    var list = document.querySelector('[data-testid="stTabs"] > div:first-child');
+    if (list && !list._stickyBound) attach();
+  }, 800);
+
+  setTimeout(attach, 600);
+})();
+</script>
 """, unsafe_allow_html=True)
 
 # ── NEIS 캐시 상태 확인 (사이드바 표시용)

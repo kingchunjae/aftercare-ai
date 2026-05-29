@@ -367,11 +367,8 @@ with st.sidebar:
     _n_decline = int(df["decline"].sum())
     decline_only = st.checkbox(f"인구감소지역만  ({_n_decline}개 지역 해당)", key="filter_decline")
 
-    df_filtered = df[
-        df["region_type"].isin(type_filter) &
-        (df["risk_score"] >= risk_min) &
-        (~decline_only | df["decline"])
-    ]
+    _base = df[df["region_type"].isin(type_filter) & (df["risk_score"] >= risk_min)]
+    df_filtered = _base[_base["decline"]] if decline_only else _base
 
 
 

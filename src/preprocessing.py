@@ -81,6 +81,15 @@ def load_data() -> pd.DataFrame:
     return df
 
 def get_summary_stats(df: pd.DataFrame) -> dict:
+    if df.empty:
+        return {
+            "total": 0, "A": 0, "B": 0, "C": 0, "D": 0,
+            "total_waitlist": 0, "avg_util_rate": 0.0, "avg_risk_score": 0.0,
+            "high_risk_count": 0,
+            "max_risk_region": "-", "max_risk_score": 0,
+            "ac_count": 0, "ab_count": 0, "decline_count": 0,
+        }
+    max_row = df.loc[df["risk_score"].idxmax()]
     return {
         "total": len(df),
         "A": int((df["region_type"]=="A").sum()),
@@ -90,7 +99,12 @@ def get_summary_stats(df: pd.DataFrame) -> dict:
         "total_waitlist":   int(df["care_waitlist"].sum()),
         "avg_util_rate":    round(df["care_util_rate"].mean(), 1),
         "avg_risk_score":   round(df["risk_score"].mean(), 1),
-        "high_risk_count":  int((df["risk_score"] >= 60).sum()),
+        "high_risk_count":  int((df["risk_score"] >= 30).sum()),
+        "max_risk_region":  str(max_row["name"]),
+        "max_risk_score":   int(max_row["risk_score"]),
+        "ac_count":         int(((df["region_type"]=="A") | (df["region_type"]=="C")).sum()),
+        "ab_count":         int(((df["region_type"]=="A") | (df["region_type"]=="B")).sum()),
+        "decline_count":    int(df["decline"].sum()),
     }
 
 def get_region_detail(df: pd.DataFrame, region_id: str) -> dict:

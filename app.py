@@ -758,12 +758,54 @@ with tab1:
                     break
 
         # ── 요약 통계 (지도 바로 아래)
-        st.markdown('<p class="section-header">요약 통계</p>', unsafe_allow_html=True)
-        _s1, _s2, _s3, _s4 = st.columns(4)
-        _s1.metric("전체 지역", stats["total"])
-        _s2.metric("고위험 지역", stats["high_risk_count"])
-        _s3.metric("총 대기 아동", f"{stats['total_waitlist']:,}명")
-        _s4.metric("평균 이용률", f"{stats['avg_util_rate']}%")
+        _util_diff = round(stats["avg_util_rate"] - 91.0, 1)
+        _util_sign = "▼" if _util_diff < 0 else "▲"
+        st.markdown(f"""
+<div style="margin:14px 0 6px;">
+  <div style="font-size:11px;font-weight:700;color:#C0392B;letter-spacing:.08em;
+              text-transform:uppercase;margin-bottom:6px;padding-left:2px;">
+    🚨 긴급 현황
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+    <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:#9b1c1c;font-weight:600;margin-bottom:4px;">A형 즉각개입 지역</div>
+      <div style="font-size:22px;font-weight:800;color:#C0392B;line-height:1.1;">{stats["A"]}<span style="font-size:13px;font-weight:600;">개</span></div>
+      <div style="font-size:10px;color:#b91c1c;margin-top:3px;">위기+공급부족 · 최우선 개입</div>
+    </div>
+    <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:#9b1c1c;font-weight:600;margin-bottom:4px;">총 대기 아동</div>
+      <div style="font-size:22px;font-weight:800;color:#C0392B;line-height:1.1;">{stats["total_waitlist"]:,}<span style="font-size:13px;font-weight:600;">명</span></div>
+      <div style="font-size:10px;color:#b91c1c;margin-top:3px;">필터 적용 지역 합산</div>
+    </div>
+    <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:#9b1c1c;font-weight:600;margin-bottom:4px;">최고 위험 지역</div>
+      <div style="font-size:18px;font-weight:800;color:#C0392B;line-height:1.2;">{stats["max_risk_region"]}</div>
+      <div style="font-size:10px;color:#b91c1c;margin-top:3px;">위험점수 {stats["max_risk_score"]}점</div>
+    </div>
+  </div>
+  <div style="font-size:11px;font-weight:700;color:#1B4D6B;letter-spacing:.08em;
+              text-transform:uppercase;margin-bottom:6px;padding-left:2px;">
+    📊 공급·균형 현황
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:#1e3a5f;font-weight:600;margin-bottom:4px;">공급부족 A+C형</div>
+      <div style="font-size:22px;font-weight:800;color:#1B4D6B;line-height:1.1;">{stats["ac_count"]}<span style="font-size:13px;font-weight:600;">개</span></div>
+      <div style="font-size:10px;color:#1e40af;margin-top:3px;">전체 {stats["total"]}개 중 우선 확충</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:#1e3a5f;font-weight:600;margin-bottom:4px;">평균 이용률</div>
+      <div style="font-size:22px;font-weight:800;color:#1B4D6B;line-height:1.1;">{stats["avg_util_rate"]}<span style="font-size:13px;font-weight:600;">%</span></div>
+      <div style="font-size:10px;color:#1e40af;margin-top:3px;">{_util_sign}{abs(_util_diff)}%p vs 전국 91%</div>
+    </div>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 14px;">
+      <div style="font-size:10px;color:#1e3a5f;font-weight:600;margin-bottom:4px;">인구감소지역</div>
+      <div style="font-size:22px;font-weight:800;color:#1B4D6B;line-height:1.1;">{stats["decline_count"]}<span style="font-size:13px;font-weight:600;">개</span></div>
+      <div style="font-size:10px;color:#1e40af;margin-top:3px;">전체 {stats["total"]}개 중 {stats["decline_count"]}개 해당</div>
+    </div>
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
     with col_chart:
         st.markdown('<p class="section-header">유형 분포</p>', unsafe_allow_html=True)

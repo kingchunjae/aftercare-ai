@@ -180,7 +180,7 @@ _neis_meta = _load_neis_meta()
 # ── 데이터 로드 & 모델 초기화
 # cache_version: 컬럼 구조가 바뀔 때 올려서 Streamlit Cloud 캐시 강제 무효화
 @st.cache_data
-def load(cache_version: int = 8):
+def load(cache_version: int = 9):   # v9: 유치원 파이프라인 컬럼 추가
     df = load_data()
     return df
 

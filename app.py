@@ -738,6 +738,64 @@ with tab2:
             f"공급 지수 = (돌봄교실×1.0 + 방과후학교×0.35 + 지역돌봄기관×0.40) ÷ 초등학생 수"
         )
 
+        # ── 유치원 파이프라인 (수요 선행 지표)
+        st.markdown(
+            '<p class="section-header">유치원 파이프라인'
+            '<span style="font-size:10px;color:#aaa;font-weight:400;margin-left:6px">'
+            '수요 선행 지표 (1~3년)</span></p>',
+            unsafe_allow_html=True,
+        )
+        _kk1, _kk2, _kk3 = st.columns(3)
+        _kk1.metric(
+            "유치원 수",
+            f"{detail.get('kinder_count', 0)}개원",
+            help="유치원알리미 공시 기반 추정값",
+        )
+        _kk2.metric(
+            "유치원 원아",
+            f"{detail.get('kinder_enrolled', 0):,}명",
+            help="현재 재원 아동 수 (3~5세) — 1~3년 내 초등 입학 예정",
+        )
+        _kk3.metric(
+            "유치원 이용률",
+            f"{detail.get('kinder_util_rate', 0)*100:.1f}%",
+            help="재원 아동 ÷ 정원 (높을수록 해당 지역 돌봄 의존도 高)",
+        )
+
+        # 파이프라인 지수 vs 전국 평균 시각화
+        _k_pip   = detail.get("kinder_pipeline_idx", 0.0)
+        _k_nat   = 0.215
+        _k_diff  = _k_pip - _k_nat
+        _k_color = "#C0392B" if _k_diff > 0.02 else ("#27AE60" if _k_diff < -0.02 else "#E67E22")
+        _k_arrow = "▲" if _k_diff > 0 else "▼"
+        _k_label = (
+            "전국 평균 상회 → 미래 수요 증가 예상" if _k_diff > 0.02
+            else "전국 평균 하회 → 미래 수요 감소 예상" if _k_diff < -0.02
+            else "전국 평균 수준 유지"
+        )
+        _k_trend = detail.get("kinder_trend_pct", 0.0)
+        st.markdown(
+            f"<div style='background:#f8fafc;border-radius:10px;padding:12px 16px;"
+            f"margin-top:6px;border-left:4px solid {_k_color}'>"
+            f"<div style='font-size:11px;color:#64748b;margin-bottom:5px'>"
+            f"파이프라인 지수 &nbsp;|&nbsp; 전국 평균 <b>0.215</b> 기준</div>"
+            f"<div style='display:flex;align-items:center;gap:12px;flex-wrap:wrap'>"
+            f"<span style='font-size:26px;font-weight:800;color:{_k_color};letter-spacing:-1px'>"
+            f"{_k_pip:.3f}</span>"
+            f"<div>"
+            f"<div style='font-size:12px;font-weight:700;color:{_k_color}'>"
+            f"{_k_arrow} {abs(_k_diff):.3f} &nbsp; {_k_label}</div>"
+            f"<div style='font-size:11px;color:#94a3b8;margin-top:2px'>"
+            f"원아 증감율 {_k_trend:+.1f}% &nbsp;|&nbsp; "
+            f"유치원 → 초등 입학 1~3년 시차</div>"
+            f"</div></div></div>",
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            "📊 유치원알리미(e-childschoolinfo.moe.go.kr) 공시 기반 추정 "
+            "| 파이프라인 지수 = 유치원 원아 ÷ 초등학생 수"
+        )
+
     with col_r:
         st.markdown('<p class="section-header">5년 후 수요 예측</p>', unsafe_allow_html=True)
         pred = predict_region(detail_row, reg, scaler)
@@ -1685,14 +1743,17 @@ with tab5:
             '<div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;'
             'padding:18px 22px">'
             '<div style="font-size:11px;font-weight:700;color:#166534;letter-spacing:1px;'
-            'text-transform:uppercase;margin-bottom:10px">산출 공식</div>'
-            '<div style="font-size:15px;font-weight:700;color:#14532d;line-height:2.1;font-family:monospace">'
+            'text-transform:uppercase;margin-bottom:10px">개선된 산출 공식 (v2)</div>'
+            '<div style="font-size:13px;font-weight:700;color:#14532d;line-height:2.2;font-family:monospace">'
             'demand_5y =<br>'
-            '&nbsp;&nbsp;demand_idx × (1 + 출생변화율 × <b>0.6</b>)<br>'
-            '<br>'
-            '<span style="font-size:12px;font-weight:400;color:#15803d">'
-            '계수 0.6 = 출생-수요 반영 지연 보정<br>'
-            '(출생 → 초등학령 도달까지 6년 소요)</span>'
+            '&nbsp;&nbsp;demand_idx × (<br>'
+            '&nbsp;&nbsp;&nbsp;&nbsp;1<br>'
+            '&nbsp;&nbsp;&nbsp;&nbsp;+ 출생변화율 × <b>0.40</b><br>'
+            '&nbsp;&nbsp;&nbsp;&nbsp;+ 유치원증감율 × <b>0.30</b><br>'
+            '&nbsp;&nbsp;&nbsp;&nbsp;+ 파이프라인편차 × <b>0.10</b><br>'
+            '&nbsp;&nbsp;)<br>'
+            '<span style="font-size:11px;font-weight:400;color:#15803d">'
+            '파이프라인편차 = (원아/초등생 ÷ 0.215) − 1</span>'
             '</div>'
             '</div>',
             unsafe_allow_html=True,
@@ -1702,17 +1763,48 @@ with tab5:
             '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;'
             'padding:18px 22px">'
             '<div style="font-size:12px;font-weight:700;color:#1e293b;margin-bottom:10px">'
-            '💡 0.6 계수 설정 근거</div>'
-            '<ul style="font-size:12px;color:#374151;line-height:1.8;margin:0;padding-left:16px">'
-            '<li>출생아 통계 → 초등 입학(만 6세)까지 6년의 시간 지연</li>'
-            '<li>5년 예측 창 기준: 현재 출생 변화의 약 60%만 초등학령에 반영</li>'
-            '<li>인구이동(전입·전출) 효과는 별도 보정 미적용 (보수적 추정)</li>'
-            '<li>출처: 교육부 <em>중장기 학생 수 추계 방법론</em>(2022),<br>'
-            '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;통계청 <em>장래인구추계</em>(2023)</li>'
-            '</ul>'
+            '💡 계수 설정 근거</div>'
+            '<div class="rsp-table-wrap">'
+            '<table style="width:100%;border-collapse:collapse;font-size:11.5px">'
+            '<thead><tr style="background:#f1f5f9">'
+            '<th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0">항목</th>'
+            '<th style="padding:6px 8px;text-align:center;border-bottom:1px solid #e2e8f0">계수</th>'
+            '<th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0">근거</th>'
+            '</tr></thead><tbody>'
+            '<tr><td style="padding:6px 8px;color:#374151">출생변화율</td>'
+            '<td style="padding:6px 8px;text-align:center;font-weight:700;color:#1B4D6B">0.40</td>'
+            '<td style="padding:6px 8px;color:#374151">출생→초등 6년 시차, 5년 예측창 보정<br>'
+            '<span style="font-size:10px;color:#94a3b8">교육부 중장기 학생수 추계(2022)</span></td></tr>'
+            '<tr style="background:#f9fafb"><td style="padding:6px 8px;color:#374151">유치원 증감율</td>'
+            '<td style="padding:6px 8px;text-align:center;font-weight:700;color:#22c55e">0.30</td>'
+            '<td style="padding:6px 8px;color:#374151">현재 3~5세 원아 → 1~3년 내 입학 직접 반영<br>'
+            '<span style="font-size:10px;color:#94a3b8">유치원알리미 공시 / 출생변화율×0.7 추정</span></td></tr>'
+            '<tr><td style="padding:6px 8px;color:#374151">파이프라인 편차</td>'
+            '<td style="padding:6px 8px;text-align:center;font-weight:700;color:#f97316">0.10</td>'
+            '<td style="padding:6px 8px;color:#374151">전국 평균(0.215) 대비 지역 파이프라인 규모 보정<br>'
+            '<span style="font-size:10px;color:#94a3b8">유치원알리미 2023 전국 원아/초등생 비율</span></td></tr>'
+            '</tbody></table></div>'
             '</div>',
             unsafe_allow_html=True,
         )
+
+    # 유치원 파이프라인 원리 설명
+    st.markdown(
+        '<div style="background:#fef9c3;border:1px solid #fde047;border-radius:10px;'
+        'padding:14px 18px;margin-top:10px">'
+        '<div style="font-size:12px;font-weight:700;color:#854d0e;margin-bottom:6px">'
+        '🏫 유치원 파이프라인 선행 지표 원리</div>'
+        '<div style="font-size:11.5px;color:#78350f;line-height:1.8">'
+        '현재 유치원 원아(3~5세)는 <b>1~3년 내 초등학교에 입학</b>하므로, '
+        '유치원 재원 규모가 미래 돌봄 수요를 출생통계보다 더 직접적으로 예측합니다.<br>'
+        '파이프라인 지수(유치원 원아 ÷ 초등학생)가 전국 평균(0.215)보다 높으면 '
+        '→ 수요 증가 예상 &nbsp;|&nbsp; 낮으면 → 수요 감소 예상'
+        '</div>'
+        '<div style="font-size:10px;color:#a16207;margin-top:6px">'
+        '출처: 유치원알리미(e-childschoolinfo.moe.go.kr) 시군구별 원아 현황 공시 기반 추정</div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
     st.markdown("<div style='margin-bottom:30px'></div>", unsafe_allow_html=True)
 

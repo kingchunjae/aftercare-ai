@@ -268,29 +268,104 @@ with st.sidebar:
     st.divider()
 
     st.subheader("필터")
-    st.caption("유형 선택")
-    type_filter = []
-    for _t, _info in TYPE_INFO.items():
-        _col_cb, _col_label = st.columns([0.13, 0.87])
-        with _col_cb:
-            _checked = st.checkbox(
-                label=_t, value=True,
-                key=f"filter_type_{_t}",
-                label_visibility="collapsed",
-            )
-        with _col_label:
-            st.markdown(
-                f"<div class='type-filter-row'>"
-                f"<span class='type-filter-badge' style='background:{_info['color']}'>"
-                f"{_t}형</span>"
-                f"<span class='type-filter-label'>{_info['label']}</span>"
-                f"</div>",
-                unsafe_allow_html=True,
-            )
-        if _checked:
-            type_filter.append(_t)
-    risk_min = st.slider("최소 위험 점수", 0, 100, 0)
-    decline_only = st.checkbox("인구감소지역만")
+
+    # ── 유형 선택 4사분면 ────────────────────────────
+    st.markdown(
+        "<div style='font-size:10px;font-weight:600;color:#555;margin-bottom:4px'>유형 선택</div>"
+        "<div style='display:flex;justify-content:space-between;"
+        "font-size:9px;color:#bbb;padding:0 2px;margin-bottom:3px'>"
+        "<span>← 공급부족</span><span>공급과잉/균형 →</span></div>",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        "<div style='font-size:9px;color:#bbb;font-weight:600;"
+        "padding:1px 0 3px 6px;border-left:2px solid #E0AAAA'>▲ 위기지역</div>",
+        unsafe_allow_html=True,
+    )
+    _qa_cb, _qa_lbl, _qb_cb, _qb_lbl = st.columns([1, 4, 1, 4])
+    with _qa_cb:
+        _chkA = st.checkbox("A", value=True, key="filter_type_A", label_visibility="collapsed")
+    with _qa_lbl:
+        st.markdown(
+            f"<div style='background:#fdecea;border:1.5px solid #C0392B;border-radius:7px;"
+            f"padding:5px 6px;text-align:center;opacity:{'1.0' if _chkA else '0.35'}'>"
+            f"<span style='font-size:11px;font-weight:800;color:#C0392B'>A형</span><br>"
+            f"<span style='font-size:8px;color:#C0392B;line-height:1.3'>위기+<br>공급부족</span></div>",
+            unsafe_allow_html=True,
+        )
+    with _qb_cb:
+        _chkB = st.checkbox("B", value=True, key="filter_type_B", label_visibility="collapsed")
+    with _qb_lbl:
+        st.markdown(
+            f"<div style='background:#fef4e8;border:1.5px solid #E67E22;border-radius:7px;"
+            f"padding:5px 6px;text-align:center;opacity:{'1.0' if _chkB else '0.35'}'>"
+            f"<span style='font-size:11px;font-weight:800;color:#E67E22'>B형</span><br>"
+            f"<span style='font-size:8px;color:#E67E22;line-height:1.3'>위기+<br>공급과잉</span></div>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown(
+        "<div style='font-size:9px;color:#bbb;font-weight:600;"
+        "margin-top:6px;padding:1px 0 3px 6px;border-left:2px dashed #cce0d4'>▼ 비위기지역</div>",
+        unsafe_allow_html=True,
+    )
+    _qc_cb, _qc_lbl, _qd_cb, _qd_lbl = st.columns([1, 4, 1, 4])
+    with _qc_cb:
+        _chkC = st.checkbox("C", value=True, key="filter_type_C", label_visibility="collapsed")
+    with _qc_lbl:
+        st.markdown(
+            f"<div style='background:#eaf0f7;border:1.5px solid #1B4D6B;border-radius:7px;"
+            f"padding:5px 6px;text-align:center;opacity:{'1.0' if _chkC else '0.35'}'>"
+            f"<span style='font-size:11px;font-weight:800;color:#1B4D6B'>C형</span><br>"
+            f"<span style='font-size:8px;color:#1B4D6B;line-height:1.3'>비위기+<br>공급부족</span></div>",
+            unsafe_allow_html=True,
+        )
+    with _qd_cb:
+        _chkD = st.checkbox("D", value=True, key="filter_type_D", label_visibility="collapsed")
+    with _qd_lbl:
+        st.markdown(
+            f"<div style='background:#eaf7ed;border:1.5px solid #27AE60;border-radius:7px;"
+            f"padding:5px 6px;text-align:center;opacity:{'1.0' if _chkD else '0.35'}'>"
+            f"<span style='font-size:11px;font-weight:800;color:#27AE60'>D형</span><br>"
+            f"<span style='font-size:8px;color:#27AE60;line-height:1.3'>비위기+<br>균형</span></div>",
+            unsafe_allow_html=True,
+        )
+
+    type_filter = [t for t, chk in [("A", _chkA), ("B", _chkB), ("C", _chkC), ("D", _chkD)] if chk]
+
+    # ── 추가 조건 ─────────────────────────────────────
+    st.divider()
+    st.markdown(
+        "<div style='font-size:10px;font-weight:600;color:#555;margin-bottom:6px'>추가 조건</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<div style='font-size:10px;color:#555;margin-bottom:4px'>최소 위험 점수</div>",
+        unsafe_allow_html=True,
+    )
+    if "risk_slider_val" not in st.session_state:
+        st.session_state["risk_slider_val"] = 0
+    _pb0, _pb1, _pb2 = st.columns(3)
+    with _pb0:
+        if st.button("전체", use_container_width=True, key="risk_preset_all"):
+            st.session_state["risk_slider_val"] = 0
+    with _pb1:
+        if st.button("주의 30+", use_container_width=True, key="risk_preset_30"):
+            st.session_state["risk_slider_val"] = 30
+    with _pb2:
+        if st.button("위험 60+", use_container_width=True, key="risk_preset_60"):
+            st.session_state["risk_slider_val"] = 60
+    risk_min = st.slider(
+        "최소 위험 점수", 0, 100,
+        key="risk_slider_val",
+        label_visibility="collapsed",
+    )
+    _risk_match = int((df["risk_score"] >= risk_min).sum())
+    st.caption(f"위험점수 {risk_min}+ 해당: {_risk_match}개 지역")
+
+    _n_decline = int(df["decline"].sum())
+    decline_only = st.checkbox(f"인구감소지역만  ({_n_decline}개 지역 해당)", key="filter_decline")
 
     df_filtered = df[
         df["region_type"].isin(type_filter) &
